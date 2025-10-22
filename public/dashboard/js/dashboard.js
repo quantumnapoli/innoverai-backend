@@ -211,9 +211,10 @@ async function loadCallsDataLocal() {
         }
         
         // Chiamata API per ottenere i dati delle chiamate
-        const apiUrl = (window.location.hostname === 'innoverai.com')
-            ? 'https://innoverai-production-06cb.up.railway.app'
-            : (window.API_BASE_URL || 'http://localhost:8080');
+        // Preferiamo usare la funzione getAPIUrl() se disponibile, poi window.API_BASE_URL, altrimenti fallback sicuro
+        const apiUrl = (typeof window.getAPIUrl === 'function')
+            ? window.getAPIUrl()
+            : (window.API_BASE_URL || 'https://innoverai-backend-production.up.railway.app');
         const headers = { 'Content-Type': 'application/json' };
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
