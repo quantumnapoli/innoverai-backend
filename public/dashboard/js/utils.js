@@ -114,6 +114,8 @@ function getStatusLabel(status) {
         'completed': 'Completata',
         'failed': 'Fallita',
         'in_progress': 'In Corso',
+        'ended': 'Completata',
+        'unknown': 'Sconosciuto',
         'default': 'Sconosciuto'
     };
     

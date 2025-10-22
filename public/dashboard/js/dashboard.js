@@ -302,19 +302,19 @@ function updateDashboardData() {
 function updateSummaryMetrics() {
     const data = dashboardState.filteredData;
     
-    // Calcolo metriche base
+    // Calcolo metriche base - consideriamo TUTTE le chiamate non solo completed
     const totalCalls = data.length;
-    const completedCalls = data.filter(call => call.status === 'completed');
     
-    // Calcolo totale minuti (solo chiamate completate)
-    const totalSeconds = completedCalls.reduce((sum, call) => sum + (call.duration_seconds || 0), 0);
-    const totalMinutes = Math.round((totalSeconds / 60) * 100) / 100; // Arrotondato a 2 decimali
+    // Calcolo totale minuti (tutte le chiamate con duration)
+    const totalSeconds = data.reduce((sum, call) => sum + (call.duration_seconds || 0), 0);
+    const totalMinutes = Math.round((totalSeconds / 60) * 100) / 100;
     
     // Calcolo costo totale
     const totalCost = Math.round(totalMinutes * dashboardState.currentCostPerMinute * 100) / 100;
     
-    // Calcolo durata media (solo chiamate completate)
-    const averageSeconds = completedCalls.length > 0 ? totalSeconds / completedCalls.length : 0;
+    // Calcolo durata media (tutte le chiamate con durata)
+    const callsWithDuration = data.filter(call => call.duration_seconds > 0);
+    const averageSeconds = callsWithDuration.length > 0 ? totalSeconds / callsWithDuration.length : 0;
     const averageMinutes = Math.round((averageSeconds / 60) * 100) / 100;
     
     // Aggiornamento DOM
@@ -407,9 +407,6 @@ function createCallTableRow(call, index) {
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
             <span class="cost-value">€${callCost.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</span>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-            ${showRealPrice ? `<span class="font-semibold text-green-600">€${realPrice.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</span>` : `<span class="text-sm text-gray-400">-</span>`}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
             <button onclick="showConversationModal(${index})" class="text-blue-600 hover:text-blue-800 font-medium">
