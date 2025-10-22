@@ -227,6 +227,60 @@ app.post('/api/login', async (req, res) => {
         if (row.agent_id) payload.agent_id = row.agent_id;
 
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '12h' });
+
+        // Trigger Retell sync in background (don't wait for it to complete)
+        if (process.env.RETELL_KEY) {
+            setImmediate(async () => {
+                try {
+                    console.log(`[LOGIN] Triggering Retell sync for user ${username}...`);
+                    const retellResp = await fetch('https://api.retellai.com/v2/list-calls', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${process.env.RETELL_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ limit: 1000 })
+                    });
+                    if (retellResp.ok) {
+                        const retellCalls = await retellResp.json();
+                        console.log(`[LOGIN] Syncing ${retellCalls.length} calls...`);
+                        for (const call of retellCalls) {
+                            const call_id = call.call_id;
+                            if (!call_id) continue;
+                            let startTime = null;
+                            let endTime = null;
+                            if (call.start_time) {
+                                const startMs = typeof call.start_time === 'string' ? parseInt(call.start_time) : call.start_time;
+                                if (!isNaN(startMs)) startTime = new Date(startMs).toISOString();
+                            }
+                            if (call.end_time) {
+                                const endMs = typeof call.end_time === 'string' ? parseInt(call.end_time) : call.end_time;
+                                if (!isNaN(endMs)) endTime = new Date(endMs).toISOString();
+                            }
+                            const durationSecs = call.duration_ms ? Math.round(call.duration_ms / 1000) : null;
+                            const agentId = call.agent_id || null;
+                            const agentName = call.agent_name || null;
+                            const transcript = call.transcript || '';
+                            const callAnalysis = call.call_analysis || {};
+                            const callSummary = callAnalysis.call_summary || null;
+                            const detailedSummary = callAnalysis.custom_analysis_data?.detailed_call_summary || null;
+                            const totalCost = call.total_cost || null;
+                            const existing = await pool.query('SELECT id FROM calls WHERE call_id = $1', [call_id]);
+                            const now = Date.now();
+                            if (existing.rows.length > 0) {
+                                await pool.query(`UPDATE calls SET from_number=$1, to_number=$2, start_time=$3, end_time=$4, duration_seconds=$5, direction=$6, status=$7, agent_id=$8, retell_agent_id=$9, retell_agent_name=$10, retell_call_status=$11, retell_transcript=$12, retell_total_cost=$13, call_summary=$14, detailed_call_summary=$15, updated_at=$16 WHERE call_id=$17`, [call.from, call.to, startTime, endTime, durationSecs, call.direction || 'inbound', call.status || 'completed', agentId, agentId, agentName, call.status || 'completed', transcript, totalCost, callSummary, detailedSummary, now, call_id]);
+                            } else {
+                                await pool.query(`INSERT INTO calls (call_id, from_number, to_number, start_time, end_time, duration_seconds, direction, status, agent_id, retell_agent_id, retell_agent_name, retell_call_status, retell_transcript, retell_total_cost, call_summary, detailed_call_summary, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`, [call_id, call.from, call.to, startTime, endTime, durationSecs, call.direction || 'inbound', call.status || 'completed', agentId, agentId, agentName, call.status || 'completed', transcript, totalCost, callSummary, detailedSummary, now, now]);
+                            }
+                        }
+                        console.log(`[LOGIN] Retell sync completed`);
+                    }
+                } catch (e) {
+                    console.error('[LOGIN] Retell sync background error:', e.message);
+                }
+            });
+        }
+
         res.json({ token, username: row.username, role: row.role, name: row.name, agent_id: row.agent_id || null });
     } catch (err) {
         console.error('Login error:', err);
@@ -443,6 +497,139 @@ app.get('/api/calls', authMiddleware, async (req, res) => {
     } catch (err) {
         console.error('Get calls error:', err);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// POST /api/sync-retell - Sincronizza le chiamate da Retell API nel database
+app.post('/api/sync-retell', authMiddleware, async (req, res) => {
+    try {
+        const RETELL_KEY = process.env.RETELL_KEY;
+        if (!RETELL_KEY) {
+            return res.status(400).json({ error: 'RETELL_KEY not configured' });
+        }
+
+        console.log('[SYNC-RETELL] Starting sync from Retell API...');
+        
+        // Fetch calls from Retell
+        const retellResp = await fetch('https://api.retellai.com/v2/list-calls', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${RETELL_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ limit: 1000 })
+        });
+
+        if (!retellResp.ok) {
+            console.error('[SYNC-RETELL] Retell API error:', retellResp.status);
+            return res.status(500).json({ error: 'Retell API error', status: retellResp.status });
+        }
+
+        const retellCalls = await retellResp.json();
+        console.log(`[SYNC-RETELL] Fetched ${retellCalls.length} calls from Retell`);
+
+        let imported = 0;
+        let updated = 0;
+
+        // Upsert each call
+        for (const call of retellCalls) {
+            const call_id = call.call_id;
+            if (!call_id) continue;
+
+            // Extract call times (convert from milliseconds to ISO string if needed)
+            let startTime = null;
+            let endTime = null;
+            if (call.start_time) {
+                const startMs = typeof call.start_time === 'string' ? parseInt(call.start_time) : call.start_time;
+                if (!isNaN(startMs)) {
+                    startTime = new Date(startMs).toISOString();
+                }
+            }
+            if (call.end_time) {
+                const endMs = typeof call.end_time === 'string' ? parseInt(call.end_time) : call.end_time;
+                if (!isNaN(endMs)) {
+                    endTime = new Date(endMs).toISOString();
+                }
+            }
+
+            // Calculate duration
+            let durationSecs = call.duration_ms ? Math.round(call.duration_ms / 1000) : null;
+
+            // Get agent info
+            const agentId = call.agent_id || null;
+            const agentName = call.agent_name || null;
+
+            // Get transcript
+            const transcript = call.transcript || '';
+
+            // Get summaries
+            const callAnalysis = call.call_analysis || {};
+            const callSummary = callAnalysis.call_summary || null;
+            const detailedSummary = callAnalysis.custom_analysis_data?.detailed_call_summary || null;
+
+            // Get cost
+            const totalCost = call.total_cost || null;
+
+            // Check if call exists
+            const existing = await pool.query('SELECT id FROM calls WHERE call_id = $1', [call_id]);
+            const now = Date.now();
+
+            if (existing.rows.length > 0) {
+                // UPDATE
+                await pool.query(`
+                    UPDATE calls SET
+                        from_number = $1,
+                        to_number = $2,
+                        start_time = $3,
+                        end_time = $4,
+                        duration_seconds = $5,
+                        direction = $6,
+                        status = $7,
+                        agent_id = $8,
+                        retell_agent_id = $9,
+                        retell_agent_name = $10,
+                        retell_call_status = $11,
+                        retell_transcript = $12,
+                        retell_total_cost = $13,
+                        call_summary = $14,
+                        detailed_call_summary = $15,
+                        updated_at = $16
+                    WHERE call_id = $17
+                `, [
+                    call.from, call.to, startTime, endTime, durationSecs,
+                    call.direction || 'inbound', call.status || 'completed',
+                    agentId, agentId, agentName, call.status || 'completed',
+                    transcript, totalCost, callSummary, detailedSummary, now, call_id
+                ]);
+                updated++;
+            } else {
+                // INSERT
+                await pool.query(`
+                    INSERT INTO calls (
+                        call_id, from_number, to_number, start_time, end_time,
+                        duration_seconds, direction, status, agent_id,
+                        retell_agent_id, retell_agent_name, retell_call_status,
+                        retell_transcript, retell_total_cost, call_summary,
+                        detailed_call_summary, created_at, updated_at
+                    ) VALUES (
+                        $1, $2, $3, $4, $5, $6, $7, $8, $9,
+                        $10, $11, $12, $13, $14, $15, $16, $17, $18
+                    )
+                `, [
+                    call_id, call.from, call.to, startTime, endTime,
+                    durationSecs, call.direction || 'inbound', call.status || 'completed', agentId,
+                    agentId, agentName, call.status || 'completed',
+                    transcript, totalCost, callSummary, detailedSummary, now, now
+                ]);
+                imported++;
+            }
+        }
+
+        console.log(`[SYNC-RETELL] Done: imported=${imported}, updated=${updated}`);
+        res.json({ ok: true, imported, updated, total: retellCalls.length });
+    } catch (err) {
+        console.error('[SYNC-RETELL] Error:', err);
+        res.status(500).json({ error: 'Internal server error', details: err.message });
     }
 });
 

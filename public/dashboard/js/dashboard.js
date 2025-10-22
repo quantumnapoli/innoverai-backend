@@ -12,7 +12,7 @@ const DASHBOARD_CONFIG = {
     AUTO_REFRESH_INTERVAL: 60000, // 1 minuto
     
     // Numero massimo di record da caricare per volta
-    MAX_RECORDS_PER_PAGE: 100,
+    MAX_RECORDS_PER_PAGE: 50,
     
     // Formato date per l'interfaccia
     DATE_FORMAT_OPTIONS: {
@@ -47,7 +47,11 @@ let dashboardState = {
     },
     
     // Tariffa corrente per minuto
-    currentCostPerMinute: DASHBOARD_CONFIG.DEFAULT_COST_PER_MINUTE
+    currentCostPerMinute: DASHBOARD_CONFIG.DEFAULT_COST_PER_MINUTE,
+    
+    // Paginazione
+    currentPage: 1,
+    pageSize: DASHBOARD_CONFIG.MAX_RECORDS_PER_PAGE
 };
 
 /**
@@ -356,11 +360,96 @@ function updateCallsTable() {
     // Ordina i dati per data (più recenti prima)
     const sortedData = [...data].sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
     
-    // Genera righe della tabella
-    sortedData.forEach((call, index) => {
+    // Pagination logic
+    const pageSize = dashboardState.pageSize;
+    const totalPages = Math.ceil(sortedData.length / pageSize);
+    const currentPage = Math.max(1, Math.min(dashboardState.currentPage, totalPages));
+    dashboardState.currentPage = currentPage;
+    
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pageData = sortedData.slice(startIndex, endIndex);
+    
+    // Genera righe della tabella per la pagina corrente
+    pageData.forEach((call, index) => {
         const row = createCallTableRow(call, index);
         tableBody.appendChild(row);
     });
+    
+    // Update pagination info
+    updatePaginationControls(currentPage, totalPages, sortedData.length);
+}
+
+/**
+ * Aggiorna i controlli di paginazione
+ */
+function updatePaginationControls(currentPage, totalPages, totalRecords) {
+    const paginationContainer = document.getElementById('paginationContainer');
+    if (!paginationContainer) {
+        // Create pagination container if it doesn't exist
+        const tableContainer = document.getElementById('callsTableContainer');
+        if (tableContainer && tableContainer.parentNode) {
+            const pagination = document.createElement('div');
+            pagination.id = 'paginationContainer';
+            pagination.className = 'flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-200';
+            tableContainer.parentNode.insertBefore(pagination, tableContainer.nextSibling);
+        }
+    }
+    
+    if (!paginationContainer) return;
+    
+    const pageSize = dashboardState.pageSize;
+    const startRecord = (currentPage - 1) * pageSize + 1;
+    const endRecord = Math.min(currentPage * pageSize, totalRecords);
+    
+    paginationContainer.innerHTML = `
+        <div class="text-sm text-gray-600">
+            Showing <span class="font-medium">${startRecord}</span> to <span class="font-medium">${endRecord}</span> of <span class="font-medium">${totalRecords}</span> records
+        </div>
+        <div class="flex gap-2">
+            <button 
+                onclick="previousPage()" 
+                ${currentPage === 1 ? 'disabled' : ''} 
+                class="px-3 py-1 border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                ← Previous
+            </button>
+            <span class="px-3 py-1 text-sm text-gray-600">
+                Page <span class="font-medium">${currentPage}</span> of <span class="font-medium">${totalPages}</span>
+            </span>
+            <button 
+                onclick="nextPage()" 
+                ${currentPage === totalPages ? 'disabled' : ''} 
+                class="px-3 py-1 border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Next →
+            </button>
+        </div>
+    `;
+}
+
+/**
+ * Go to next page
+ */
+function nextPage() {
+    const sortedData = [...dashboardState.filteredData].sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
+    const totalPages = Math.ceil(sortedData.length / dashboardState.pageSize);
+    if (dashboardState.currentPage < totalPages) {
+        dashboardState.currentPage++;
+        updateCallsTable();
+        // Scroll to table
+        document.getElementById('callsTableContainer')?.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+/**
+ * Go to previous page
+ */
+function previousPage() {
+    if (dashboardState.currentPage > 1) {
+        dashboardState.currentPage--;
+        updateCallsTable();
+        // Scroll to table
+        document.getElementById('callsTableContainer')?.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 /**
@@ -371,7 +460,10 @@ function createCallTableRow(call, index) {
     row.className = 'table-row';
     
     // Calcoli per la riga con €0.20 fisso
-    const durationMinutes = Math.round((call.duration_seconds / 60) * 100) / 100;
+    const totalSeconds = call.duration_seconds || 0;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.round(totalSeconds % 60);
+    const durationMinutes = Math.round((totalSeconds / 60) * 100) / 100; // for cost calculation
     const callCost = Math.round(durationMinutes * 0.20 * 100) / 100; // €0.20 fisso
     const formattedDate = formatDateTime(call.start_time);
     
@@ -387,6 +479,9 @@ function createCallTableRow(call, index) {
     let callStatus = call.status || call.retell_call_status || 'unknown';
     if (callStatus === 'ended') callStatus = 'completed';
     
+    // Format duration as "X min Y sec"
+    const durationDisplay = totalSeconds > 0 ? `${minutes}m ${seconds}s` : '0s';
+    
     row.innerHTML = `
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
             ${escapeHtml(call.from_number || 'N/A')}
@@ -395,7 +490,7 @@ function createCallTableRow(call, index) {
             ${displayDate}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-            <span class="font-medium">${durationMinutes.toLocaleString('it-IT', { minimumFractionDigits: 2 })} min</span>
+            <span class="font-medium">${durationDisplay}</span>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
             <span class="status-badge status-${callStatus}">
@@ -460,7 +555,10 @@ function applyCurrentFilters() {
     
     dashboardState.filteredData = filtered;
     
-    console.log(`✅ Filtri applicati: ${filtered.length} di ${dashboardState.callsData.length} record`);
+    // Reset to first page when filters change
+    dashboardState.currentPage = 1;
+    
+    console.log(`📊 Filtri applicati: ${filtered.length} record corrispondono ai criteri`);
 }
 
 /**
