@@ -54,6 +54,7 @@
         window.API_BASE_URL = '';
 
         // Try to populate runtime config from backend /config endpoint
+        // NOTE: do not blindly accept domains that are known to cause CORS preflight redirects
         (async function(){
             try {
                 const resp = await fetch('/config');
@@ -61,8 +62,13 @@
                 const cfg = await resp.json();
                 // Only non-secret values are returned by the server
                 if (cfg.RETELL_BASE_URL) window.RETELL_CONFIG.BASE_URL = cfg.RETELL_BASE_URL;
-                if (cfg.BASE_URL_APP) window.API_BASE_URL = cfg.BASE_URL_APP;
-                if (cfg.API_URL) window.API_BASE_URL = window.API_BASE_URL || cfg.API_URL;
+                // Accept BASE_URL_APP only if it does not point to the problematic api host
+                if (cfg.BASE_URL_APP && !cfg.BASE_URL_APP.includes('api.innoverai.com')) {
+                    window.API_BASE_URL = cfg.BASE_URL_APP;
+                } else {
+                    console.warn('⚠️ Skipping BASE_URL_APP from /config because it points to api.innoverai.com or is empty. Using client config fallback.');
+                }
+                if (cfg.API_URL && !window.API_BASE_URL) window.API_BASE_URL = cfg.API_URL;
                 console.log('🔒 Runtime config loaded from /config');
             } catch (e) {
                 console.warn('⚠️ Could not load /config:', e.message);
