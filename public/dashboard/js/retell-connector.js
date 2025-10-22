@@ -241,6 +241,8 @@ class RetellConnector {
                 direction: direction,
                 status: status,
                 cost_per_minute: dashboardState?.currentCostPerMinute || 0.20,
+                // Map agent_id for proper scoping in the backend DB (use retell agent or connector default)
+                agent_id: retellCall.agent_id || this.agentId || null,
                 
                 // Campi aggiuntivi Retell per future features
                 retell_agent_id: retellCall.agent_id,
