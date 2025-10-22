@@ -215,14 +215,38 @@ async function loadCallsDataLocal() {
         const apiUrl = (typeof window.getAPIUrl === 'function')
             ? window.getAPIUrl()
             : (window.API_BASE_URL || 'https://innoverai-backend-production.up.railway.app');
+
+        // Debug logging to help diagnosing 401/CSP issues
+        console.log('🔗 loadCallsDataLocal using API URL:', apiUrl);
+        console.log('🔐 Session token present:', token ? `${token.substring(0,6)}...${token.substring(token.length-6)}` : 'NO_TOKEN');
+
         const headers = { 'Content-Type': 'application/json' };
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
+
+        // In production/dashboard require auth token; if missing redirect to login to obtain token
+        const requireAuth = window.location.hostname === 'dashboard.innoverai.com' || window.location.hostname.includes('innoverai-backend');
+        if (requireAuth && !token) {
+            console.warn('❌ No auth token found and auth is required in production - redirecting to login');
+            showNotification('Devi effettuare il login per visualizzare i dati', 'error');
+            setTimeout(() => window.location.href = 'login.html', 300);
+            return;
         }
-        
+
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         const response = await fetch(`${apiUrl}/api/calls?limit=${DASHBOARD_CONFIG.MAX_RECORDS_PER_PAGE}`, {
             headers
         });
+
+        // Handle unauthorized explicitly to improve UX
+        if (response.status === 401) {
+            console.warn('⚠️ Backend returned 401 Unauthorized for /api/calls');
+            // Clear session and redirect to login
+            const sessionKey = window.AUTH_CONFIG ? window.AUTH_CONFIG.SESSION.KEY : 'innoverAISession';
+            try { localStorage.removeItem(sessionKey); } catch(e){}
+            showNotification('Sessione non valida — effettua nuovamente il login', 'error');
+            setTimeout(() => window.location.href = 'login.html', 400);
+            throw new Error(`Errore HTTP: ${response.status}`);
+        }
         
         if (!response.ok) {
             throw new Error(`Errore HTTP: ${response.status}`);
