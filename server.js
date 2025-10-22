@@ -537,7 +537,7 @@ app.get('/health', (req, res) => res.json({ ok: true }));
 
 // SPA fallback: serve index.html for unknown routes (ONLY for non-API routes)
 // This must be AFTER all API routes
-const frontendDist = path.join(__dirname, 'public');
+// `frontendDist` is declared earlier in the file; reuse it here
 try {
     const indexExists = require('fs').existsSync(path.join(frontendDist, 'index.html'));
     if (indexExists && (process.env.SERVE_STATIC === 'true' || process.env.NODE_ENV === 'production')) {
