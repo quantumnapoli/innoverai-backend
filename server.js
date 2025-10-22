@@ -244,7 +244,16 @@ app.post('/api/login', async (req, res) => {
                     if (retellResp.ok) {
                         const retellCalls = await retellResp.json();
                         console.log(`[LOGIN] Syncing ${retellCalls.length} calls...`);
-                        for (const call of retellCalls) {
+                        
+                        // For non-admin users, only sync calls matching their agent_id
+                        let callsToSync = retellCalls;
+                        const userAgentId = row.agent_id;
+                        if (row.role !== 'admin' && userAgentId) {
+                            callsToSync = retellCalls.filter(call => call.agent_id === userAgentId);
+                            console.log(`[LOGIN] Filtering to user's agent (${userAgentId}): ${callsToSync.length} calls`);
+                        }
+                        
+                        for (const call of callsToSync) {
                             const call_id = call.call_id;
                             if (!call_id) continue;
                             let startTime = null;
@@ -258,6 +267,7 @@ app.post('/api/login', async (req, res) => {
                                 if (!isNaN(endMs)) endTime = new Date(endMs).toISOString();
                             }
                             const durationSecs = call.duration_ms ? Math.round(call.duration_ms / 1000) : null;
+                            // Use the agent_id from the call (from Retell)
                             const agentId = call.agent_id || null;
                             const agentName = call.agent_name || null;
                             const transcript = call.transcript || '';
@@ -273,7 +283,7 @@ app.post('/api/login', async (req, res) => {
                                 await pool.query(`INSERT INTO calls (call_id, from_number, to_number, start_time, end_time, duration_seconds, direction, status, agent_id, retell_agent_id, retell_agent_name, retell_call_status, retell_transcript, retell_total_cost, call_summary, detailed_call_summary, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`, [call_id, call.from, call.to, startTime, endTime, durationSecs, call.direction || 'inbound', call.status || 'completed', agentId, agentId, agentName, call.status || 'completed', transcript, totalCost, callSummary, detailedSummary, now, now]);
                             }
                         }
-                        console.log(`[LOGIN] Retell sync completed`);
+                        console.log(`[LOGIN] Retell sync completed - synced ${callsToSync.length} calls`);
                     }
                 } catch (e) {
                     console.error('[LOGIN] Retell sync background error:', e.message);

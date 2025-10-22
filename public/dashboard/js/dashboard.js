@@ -1284,8 +1284,23 @@ function showConversationModal(index) {
         return;
     }
     
-    // Ottieni il transcript dalla chiamata
-    const transcript = call.retell_transcript || call.transcript || 'Nessuna trascrizione disponibile per questa chiamata.';
+    // Prioritize summaries, fallback to transcript
+    let contentToDisplay = '';
+    let contentTitle = 'Analisi Conversazione';
+    
+    if (call.call_summary) {
+        contentToDisplay = call.call_summary;
+        if (call.detailed_call_summary) {
+            contentToDisplay += '\n\n---\n\n' + call.detailed_call_summary;
+        }
+        contentTitle = 'Analisi e Riassunto';
+    } else if (call.detailed_call_summary) {
+        contentToDisplay = call.detailed_call_summary;
+        contentTitle = 'Dettagli Conversazione';
+    } else {
+        contentToDisplay = call.retell_transcript || call.transcript || 'Nessun contenuto disponibile per questa chiamata.';
+        contentTitle = 'Trascrizione Completa';
+    }
     
     // Crea il modal se non esiste
     let modal = document.getElementById('conversationModal');
@@ -1298,7 +1313,7 @@ function showConversationModal(index) {
                 <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                     <h3 class="text-xl font-semibold text-gray-900">
                         <i class="fas fa-comments mr-2 text-blue-600"></i>
-                        Conversazione
+                        <span id="modalTitle">Conversazione</span>
                     </h3>
                     <button onclick="closeConversationModal()" class="text-gray-400 hover:text-gray-600">
                         <i class="fas fa-times text-2xl"></i>
@@ -1347,14 +1362,18 @@ function showConversationModal(index) {
     // Popola i dati del modal
     const callDate = call.start_time || call.created_at || call.end_time;
     const displayDate = callDate ? formatDateTime(callDate) : 'N/A';
-    const durationMinutes = Math.round((call.duration_seconds / 60) * 100) / 100;
+    const totalSeconds = call.duration_seconds || 0;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.round(totalSeconds % 60);
+    const durationDisplay = totalSeconds > 0 ? `${minutes}m ${seconds}s` : '0s';
     const callStatus = call.status || call.retell_call_status || 'unknown';
     
+    document.getElementById('modalTitle').textContent = contentTitle;
     document.getElementById('modalFromNumber').textContent = call.from_number || 'N/A';
     document.getElementById('modalDate').textContent = displayDate;
-    document.getElementById('modalDuration').textContent = `${durationMinutes} min (${call.duration_seconds || 0}s)`;
+    document.getElementById('modalDuration').textContent = durationDisplay;
     document.getElementById('modalStatus').textContent = getStatusLabel(callStatus);
-    document.getElementById('modalTranscript').textContent = transcript;
+    document.getElementById('modalTranscript').textContent = contentToDisplay;
     
     // Mostra il modal
     modal.classList.remove('hidden');
