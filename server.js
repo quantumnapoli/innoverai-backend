@@ -57,7 +57,6 @@ app.use(express.json());
 // Serve static frontend in production if present
 const path = require('path');
 const fs = require('fs');
-const fs = require('fs');
 // Prefer serving static files from server/public for landing page
 const frontendDist = path.join(__dirname, 'public');
 
