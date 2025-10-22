@@ -431,8 +431,8 @@ app.get('/api/calls', authMiddleware, async (req, res) => {
             query += ' WHERE ' + conditions.join(' AND ');
         }
         
-        // Ordina per data, aggiungi LIMIT solo se specificato
-        query += ` ORDER BY start_time DESC NULLS LAST`;
+        // Ordina per start_time (data reale chiamata), fallback su created_at se NULL
+        query += ` ORDER BY COALESCE(start_time, end_time, to_timestamp(created_at::bigint/1000)) DESC`;
         if (limit) {
             query += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
             params.push(parseInt(limit), parseInt(offset));
