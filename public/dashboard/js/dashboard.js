@@ -59,11 +59,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inizializza componenti della dashboard
     initializeDashboard();
     
-    // Inizializza Retell Connector
-    initializeRetellIntegration();
-    
-    // Carica i dati iniziali (ora da Retell)
-    loadCallsDataFromRetell();
+    // Inizializza Retell Connector SOLO se abilitato e se è presente una API Key client-side
+    // In produzione preferiamo che il backend esegua la sincronizzazione e il client usi /api/calls
+    const enableRetell = (window.DASHBOARD_CONFIG && window.DASHBOARD_CONFIG.FEATURES && window.DASHBOARD_CONFIG.FEATURES.ENABLE_RETELL_INTEGRATION);
+    const clientHasRetellKey = (typeof window.RETELL_CONFIG !== 'undefined' && window.RETELL_CONFIG.API_KEY && window.RETELL_CONFIG.API_KEY.length > 0);
+
+    if (enableRetell && clientHasRetellKey) {
+        console.log('🔌 Retell integration enabled client-side');
+        initializeRetellIntegration();
+        // Carica i dati iniziali da Retell (solo client-side quando key disponibile)
+        loadCallsDataFromRetell();
+    } else {
+        console.log('ℹ️ Retell client integration disabled - loading data from backend API');
+        // Carica i dati direttamente dal backend (API -> DB)
+        loadCallsDataLocal();
+    }
     
     // Configura event listeners
     setupEventListeners();
