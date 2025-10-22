@@ -408,7 +408,8 @@ app.delete('/api/kb/:id', authMiddleware, async (req, res) => {
 // GET /api/calls - Recupera chiamate filtrate per utente
 app.get('/api/calls', authMiddleware, async (req, res) => {
     try {
-        const { limit = 100, offset = 0, agent_id } = req.query;
+        // PUNTO 1: Rimosso limit di default - prendi TUTTE le chiamate
+        const { limit, offset = 0, agent_id } = req.query;
         
         let query = 'SELECT * FROM calls';
         const params = [];
@@ -430,8 +431,12 @@ app.get('/api/calls', authMiddleware, async (req, res) => {
             query += ' WHERE ' + conditions.join(' AND ');
         }
         
-        query += ` ORDER BY start_time DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-        params.push(parseInt(limit), parseInt(offset));
+        // Ordina per data, aggiungi LIMIT solo se specificato
+        query += ` ORDER BY start_time DESC NULLS LAST`;
+        if (limit) {
+            query += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+            params.push(parseInt(limit), parseInt(offset));
+        }
         
         const result = await pool.query(query, params);
         res.json({ data: result.rows, count: result.rows.length });

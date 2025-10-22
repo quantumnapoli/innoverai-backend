@@ -5,14 +5,23 @@
 
 /**
  * Formatta una data/ora per la visualizzazione nell'interfaccia
- * @param {string|Date} dateInput - La data da formattare
+ * @param {string|Date|number} dateInput - La data da formattare (ISO string, Date object, o timestamp)
  * @returns {string} Data formattata in formato italiano
  */
 function formatDateTime(dateInput) {
     if (!dateInput) return '--';
     
     try {
-        const date = new Date(dateInput);
+        let parsedDate = dateInput;
+        
+        // PUNTO 4: Se è un numero o stringa numerica (timestamp), convertilo
+        if (typeof dateInput === 'number' || (typeof dateInput === 'string' && /^\d+$/.test(dateInput))) {
+            const timestamp = parseInt(dateInput);
+            // Se il timestamp sembra in secondi (< 10^12), convertilo in millisecondi
+            parsedDate = timestamp < 10000000000 ? timestamp * 1000 : timestamp;
+        }
+        
+        const date = new Date(parsedDate);
         
         // Verifica se la data è valida
         if (isNaN(date.getTime())) {

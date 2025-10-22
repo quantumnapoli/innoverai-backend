@@ -78,8 +78,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configura event listeners
     setupEventListeners();
     
-    // Imposta date predefinite nei filtri (ultimi 30 giorni)
-    setDefaultDateFilters();
+    // PUNTO 2: NON impostare filtri di default - mostra tutti i dati
+    // setDefaultDateFilters(); // RIMOSSO - mostra tutte le chiamate senza filtri
     
     console.log('✅ Dashboard con VocalsAI inizializzata correttamente');
 });
@@ -571,8 +571,8 @@ function handleResetFilters() {
         status: ''
     };
     
-    // Ripristina date predefinite
-    setDefaultDateFilters();
+    // PUNTO 2: NON ripristinare filtri di default
+    // setDefaultDateFilters(); // RIMOSSO - lascia filtri vuoti
     
     // Aggiorna la dashboard
     updateDashboardData();

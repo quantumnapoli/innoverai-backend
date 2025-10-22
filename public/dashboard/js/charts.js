@@ -420,17 +420,24 @@ function updateDailyCostChart() {
 
 /**
  * Raggruppa le chiamate per giorno
- * PUNTO 2: Fix per gestire date mancanti o non valide
+ * PUNTO 2 & 3: Fix per gestire date mancanti, timestamp numerici e ISO strings
  */
 function groupCallsByDay(calls) {
     const grouped = {};
     
     calls.forEach(call => {
         // Usa start_time, created_at o end_time come fallback
-        const dateValue = call.start_time || call.created_at || call.end_time;
+        let dateValue = call.start_time || call.created_at || call.end_time;
         if (!dateValue) {
             console.warn('⚠️ Chiamata senza data valida, skip:', call.call_id);
             return;
+        }
+        
+        // Se è un numero (timestamp in millisecondi o secondi), convertilo
+        if (typeof dateValue === 'number' || (typeof dateValue === 'string' && /^\d+$/.test(dateValue))) {
+            const timestamp = parseInt(dateValue);
+            // Se il timestamp sembra in secondi (< 10^12), convertilo in millisecondi
+            dateValue = timestamp < 10000000000 ? timestamp * 1000 : timestamp;
         }
         
         const date = new Date(dateValue);
@@ -452,17 +459,24 @@ function groupCallsByDay(calls) {
 
 /**
  * Raggruppa i costi per giorno
- * PUNTO 2: Fix per gestire date mancanti e calcolare correttamente i costi
+ * PUNTO 2 & 3: Fix per gestire date mancanti, timestamp numerici e calcolare correttamente i costi
  */
 function groupCostsByDay(calls) {
     const grouped = {};
     
     calls.forEach(call => {
         // Usa start_time, created_at o end_time come fallback
-        const dateValue = call.start_time || call.created_at || call.end_time;
+        let dateValue = call.start_time || call.created_at || call.end_time;
         if (!dateValue) {
             console.warn('⚠️ Chiamata senza data valida per costo, skip:', call.call_id);
             return;
+        }
+        
+        // Se è un numero (timestamp in millisecondi o secondi), convertilo
+        if (typeof dateValue === 'number' || (typeof dateValue === 'string' && /^\d+$/.test(dateValue))) {
+            const timestamp = parseInt(dateValue);
+            // Se il timestamp sembra in secondi (< 10^12), convertilo in millisecondi
+            dateValue = timestamp < 10000000000 ? timestamp * 1000 : timestamp;
         }
         
         const date = new Date(dateValue);
