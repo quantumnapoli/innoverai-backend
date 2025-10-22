@@ -44,20 +44,25 @@ echo "$RETELL_RESPONSE" | jq -c '.[]' | while read -r call; do
   transcript=$(echo "$call" | jq -r '.transcript // empty')
   total_cost=$(echo "$call" | jq -r '.total_cost // null')
 
-  # Map timestamps
-  if [ -n "$start_ts" ] && [ "$start_ts" != "null" ]; then
-    start_iso=$(date -u -d @$(echo "$start_ts" | awk '{print int($0/1000)}') --iso-8601=seconds 2>/dev/null || date -u -r $(echo "$start_ts" | awk '{print int($0/1000)}') --iso-8601=seconds 2>/dev/null || echo "")
-  else
-    start_iso=""
+  # Converti timestamp Retell (millisecondi) in ISO 8601
+  # start_timestamp e end_timestamp sono in millisecondi
+  start_iso=""
+  if [ -n "$start_ts" ] && [ "$start_ts" != "null" ] && [ "$start_ts" -gt 0 ]; then
+    # Converti millisecondi in secondi per date
+    start_sec=$(echo "$start_ts" | awk '{print int($0/1000)}')
+    # Usa node per conversione precisa (compatibile macOS/Linux)
+    start_iso=$(node -e "console.log(new Date(parseInt('$start_ts')).toISOString())" 2>/dev/null || echo "")
   fi
-  if [ -n "$end_ts" ] && [ "$end_ts" != "null" ]; then
-    end_iso=$(date -u -d @$(echo "$end_ts" | awk '{print int($0/1000)}') --iso-8601=seconds 2>/dev/null || date -u -r $(echo "$end_ts" | awk '{print int($0/1000)}') --iso-8601=seconds 2>/dev/null || echo "")
-  else
-    end_iso=""
+  
+  end_iso=""
+  if [ -n "$end_ts" ] && [ "$end_ts" != "null" ] && [ "$end_ts" -gt 0 ]; then
+    end_sec=$(echo "$end_ts" | awk '{print int($0/1000)}')
+    end_iso=$(node -e "console.log(new Date(parseInt('$end_ts')).toISOString())" 2>/dev/null || echo "")
   fi
 
+  # duration_ms è già in millisecondi, converti in secondi
   duration_seconds=0
-  if [ -n "$duration_ms" ] && [ "$duration_ms" != "null" ]; then
+  if [ -n "$duration_ms" ] && [ "$duration_ms" != "null" ] && [ "$duration_ms" -gt 0 ]; then
     duration_seconds=$((duration_ms/1000))
   fi
 
