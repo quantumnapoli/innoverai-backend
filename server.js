@@ -73,6 +73,16 @@ try {
 
         // If a request comes for the dashboard host, serve the dashboard static files
         if (fs.existsSync(dashboardDist)) {
+            // If root path requested on dashboard host, serve dashboard index directly
+            app.use((req, res, next) => {
+                const host = (req.headers.host || '').split(':')[0];
+                if (host === DASHBOARD_HOST && (req.path === '/' || req.path === '')) {
+                    return res.sendFile(path.join(dashboardDist, 'index.html'));
+                }
+                return next();
+            });
+
+            // Serve other static assets from dashboard dist when host matches
             app.use((req, res, next) => {
                 const host = (req.headers.host || '').split(':')[0];
                 if (host === DASHBOARD_HOST) {
