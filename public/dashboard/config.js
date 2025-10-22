@@ -6,7 +6,8 @@
 // Configurazione API Backend
 window.DASHBOARD_CONFIG = {
     // URL del backend API su Railway
-    API_BASE_URL: 'https://innoverai-production-06cb.up.railway.app',
+    // In produzione il backend è esposto su innoverai-backend-production.up.railway.app
+    API_BASE_URL: 'https://innoverai-backend-production.up.railway.app',
     
     // Configurazione Retell AI
     RETELL_CONFIG: {
@@ -56,9 +57,9 @@ window.DASHBOARD_CONFIG = {
 
 // Funzione per ottenere l'URL API corretto in base all'ambiente
 window.getAPIUrl = function() {
-    // In produzione usa sempre Railway
+    // In produzione usa sempre Railway (API back-end dedicated)
     if (window.location.hostname === 'dashboard.innoverai.com') {
-        return 'https://innoverai-production-06cb.up.railway.app';
+        return 'https://innoverai-backend-production.up.railway.app';
     }
     
     // In sviluppo locale
