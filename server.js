@@ -552,9 +552,10 @@ app.delete('/api/calls', authMiddleware, async (req, res) => {
 app.get('/config', (req, res) => {
     try {
         const safeConfig = {
-            API_URL: process.env.API_URL || process.env.DATABASE_URL || null,
+            // Prefer explicit BASE_URL_APP or Railway public domain. NEVER expose DATABASE_URL here.
+            API_URL: process.env.BASE_URL_APP || process.env.RAILWAY_PUBLIC_DOMAIN || null,
             RETELL_BASE_URL: process.env.RETELL_BASE_URL || 'https://api.retellai.com',
-            BASE_URL_APP: process.env.BASE_URL_APP || null
+            BASE_URL_APP: process.env.BASE_URL_APP || process.env.RAILWAY_PUBLIC_DOMAIN || null
             // NOTE: do NOT expose RETELL_API_KEY or SERVICE_API_KEY here
         };
         res.json(safeConfig);
