@@ -212,6 +212,12 @@ async function loadCallsDataLocal() {
         
         // Chiamata API per ottenere i dati delle chiamate
         // Preferiamo usare la funzione getAPIUrl() se disponibile, poi window.API_BASE_URL, altrimenti fallback sicuro
+        // If demo user, don't call backend - use demo data instead
+        if (isDemoUser()) {
+            console.log('📊 Utente demo rilevato - caricamento dati demo invece di chiamare backend');
+            return; // Demo data is already loaded by the caller
+        }
+
         const apiUrl = (typeof window.getAPIUrl === 'function')
             ? window.getAPIUrl()
             : (window.API_BASE_URL || 'https://innoverai-backend-production.up.railway.app');
@@ -222,16 +228,15 @@ async function loadCallsDataLocal() {
 
         const headers = { 'Content-Type': 'application/json' };
 
-        // In production/dashboard require auth token; if missing redirect to login to obtain token
-        const requireAuth = window.location.hostname === 'dashboard.innoverai.com' || window.location.hostname.includes('innoverai-backend');
-        if (requireAuth && !token) {
-            console.warn('❌ No auth token found and auth is required in production - redirecting to login');
+        // Non-demo users require auth token
+        if (!token) {
+            console.warn('❌ No auth token found - redirecting to login');
             showNotification('Devi effettuare il login per visualizzare i dati', 'error');
             setTimeout(() => window.location.href = 'login.html', 300);
             return;
         }
 
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;
 
         const response = await fetch(`${apiUrl}/api/calls?limit=${DASHBOARD_CONFIG.MAX_RECORDS_PER_PAGE}`, {
             headers
@@ -243,8 +248,8 @@ async function loadCallsDataLocal() {
             // Clear session and redirect to login
             const sessionKey = window.AUTH_CONFIG ? window.AUTH_CONFIG.SESSION.KEY : 'innoverAISession';
             try { localStorage.removeItem(sessionKey); } catch(e){}
-            showNotification('Sessione non valida — effettua nuovamente il login', 'error');
-            setTimeout(() => window.location.href = 'login.html', 400);
+            showNotification('Sessione scaduta o non valida — effettua nuovamente il login', 'error');
+            setTimeout(() => window.location.href = 'login.html', 1500);
             throw new Error(`Errore HTTP: ${response.status}`);
         }
         
