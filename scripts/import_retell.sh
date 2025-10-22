@@ -69,6 +69,7 @@ echo "$RETELL_RESPONSE" | jq -c '.[]' | while read -r call; do
   fi
 
   # Build payload
+  # Build payload with nulls for missing timestamps
   payload=$(jq -n --arg call_id "$call_id" \
     --arg from_number "$from_number" \
     --arg to_number "$to_number" \
@@ -81,7 +82,14 @@ echo "$RETELL_RESPONSE" | jq -c '.[]' | while read -r call; do
     --arg agent_name "$agent_name" \
     --arg transcript "$transcript" \
     --argjson retell_total_cost "$total_cost" \
-    '{call_id:$call_id, from_number:$from_number, to_number:$to_number, start_time:$start_time, end_time:$end_time, duration_seconds:$duration_seconds, direction:$direction, status:$status, agent_id:$agent_id, cost_per_minute:null, retell_agent_id:$agent_id, retell_agent_name:$agent_name, retell_call_status:$status, retell_transcript:$transcript, retell_total_cost:$retell_total_cost}')
+    '(
+      {call_id:$call_id, from_number:$from_number, to_number:$to_number,
+       start_time:(if $start_time=="" then null else $start_time end),
+       end_time:(if $end_time=="" then null else $end_time end),
+       duration_seconds:$duration_seconds, direction:$direction, status:$status, agent_id:$agent_id,
+       cost_per_minute:null, retell_agent_id:$agent_id, retell_agent_name:$agent_name,
+       retell_call_status:$status, retell_transcript:$transcript, retell_total_cost:$retell_total_cost}
+    )' )
 
   # POST to backend
   echo "Upserting call: $call_id"
