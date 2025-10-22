@@ -99,12 +99,13 @@ function formatDuration(seconds) {
 
 /**
  * Ottiene l'icona FontAwesome appropriata per lo stato della chiamata
- * @param {string} status - Stato della chiamata (completed, failed, in_progress)
+ * @param {string} status - Stato della chiamata (completed, ended, failed, in_progress)
  * @returns {string} Classe CSS dell'icona
  */
 function getStatusIcon(status) {
     const icons = {
         'completed': 'fa-check-circle',
+        'ended': 'fa-check-circle',
         'failed': 'fa-times-circle',
         'in_progress': 'fa-clock',
         'default': 'fa-question-circle'
@@ -121,9 +122,9 @@ function getStatusIcon(status) {
 function getStatusLabel(status) {
     const labels = {
         'completed': 'Completata',
+        'ended': 'Completata',
         'failed': 'Fallita',
         'in_progress': 'In Corso',
-        'ended': 'Completata',
         'unknown': 'Sconosciuto',
         'default': 'Sconosciuto'
     };
@@ -139,6 +140,7 @@ function getStatusLabel(status) {
 function getStatusColor(status) {
     const colors = {
         'completed': 'text-green-600 bg-green-100',
+        'ended': 'text-green-600 bg-green-100',
         'failed': 'text-red-600 bg-red-100',
         'in_progress': 'text-yellow-600 bg-yellow-100',
         'default': 'text-gray-600 bg-gray-100'

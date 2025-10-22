@@ -379,12 +379,13 @@ function createCallTableRow(call, index) {
     const realPrice = call.retell_total_cost || call.total_cost || (callCost * 1.1); // Fallback +10%
     const showRealPrice = isAdminUser();
     
-    // PUNTO 3: Aggiungo data formattata con fallback
-    const callDate = call.start_time || call.created_at || call.end_time;
+    // PUNTO 3: Aggiungo data formattata con fallback - priorità created_at per dati reali
+    const callDate = call.created_at || call.start_time || call.end_time;
     const displayDate = callDate ? formatDateTime(callDate) : 'N/A';
     
-    // PUNTO 4: Stato della chiamata con fallback sicuro
-    const callStatus = call.status || call.retell_call_status || 'unknown';
+    // PUNTO 4: Stato della chiamata con fallback sicuro - normalizza "ended" → "completed"
+    let callStatus = call.status || call.retell_call_status || 'unknown';
+    if (callStatus === 'ended') callStatus = 'completed';
     
     row.innerHTML = `
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
