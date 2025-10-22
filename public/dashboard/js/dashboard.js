@@ -395,10 +395,7 @@ function createCallTableRow(call, index) {
             ${displayDate}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-            <div class="flex flex-col">
-                <span class="font-medium">${durationMinutes.toLocaleString('it-IT', { minimumFractionDigits: 2 })} min</span>
-                <span class="text-xs text-gray-500">${call.duration_seconds || 0}s</span>
-            </div>
+            <span class="font-medium">${durationMinutes.toLocaleString('it-IT', { minimumFractionDigits: 2 })} min</span>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
             <span class="status-badge status-${callStatus}">
