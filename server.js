@@ -648,6 +648,7 @@ app.post('/api/calls', authMiddleware, async (req, res) => {
     try {
             const {
             call_id,
+            retell_call_id,
             from_number,
             to_number,
             start_time,
@@ -668,70 +669,74 @@ app.post('/api/calls', authMiddleware, async (req, res) => {
             detailed_call_summary
         } = req.body;
         
-        if (!call_id) {
-            return res.status(400).json({ error: 'call_id is required' });
+        // Use retell_call_id if provided, otherwise use call_id
+        const uniqueId = retell_call_id || call_id;
+        if (!uniqueId) {
+            return res.status(400).json({ error: 'call_id or retell_call_id is required' });
         }
         
         const now = Date.now();
         
-        // Verifica se la chiamata esiste già (upsert)
-        const existing = await pool.query('SELECT id FROM calls WHERE call_id = $1', [call_id]);
+        // Verifica se la chiamata esiste già usando retell_call_id (UNIQUE key)
+        const existing = await pool.query('SELECT id FROM calls WHERE retell_call_id = $1 OR call_id = $1', [uniqueId]);
         
         if (existing.rows.length > 0) {
             // UPDATE
             await pool.query(`
                 UPDATE calls SET
-                    from_number = $1,
-                    to_number = $2,
-                    start_time = $3,
-                    end_time = $4,
-                    duration_seconds = $5,
-                    direction = $6,
-                    status = $7,
-                    agent_id = $8,
-                    cost_per_minute = $9,
-                    retell_agent_id = $10,
-                    retell_agent_name = $11,
-                    retell_call_status = $12,
-                    retell_transcript = $13,
-                    retell_total_cost = $14,
-                    retell_llm_latency_ms = $15,
-                    retell_recording_url = $16,
-                    call_summary = $17,
-                    detailed_call_summary = $18,
-                    updated_at = $19
-                WHERE call_id = $20
+                    call_id = $1,
+                    retell_call_id = $2,
+                    from_number = $3,
+                    to_number = $4,
+                    start_time = $5,
+                    end_time = $6,
+                    duration_seconds = $7,
+                    direction = $8,
+                    status = $9,
+                    agent_id = $10,
+                    cost_per_minute = $11,
+                    retell_agent_id = $12,
+                    retell_agent_name = $13,
+                    retell_call_status = $14,
+                    retell_transcript = $15,
+                    retell_total_cost = $16,
+                    retell_llm_latency_ms = $17,
+                    retell_recording_url = $18,
+                    call_summary = $19,
+                    detailed_call_summary = $20,
+                    updated_at = $21
+                WHERE retell_call_id = $22 OR call_id = $22
             `, [
-                from_number, to_number, start_time, end_time, duration_seconds,
+                uniqueId, uniqueId, from_number, to_number, start_time, end_time, duration_seconds,
                 direction, status, agent_id, cost_per_minute,
                 retell_agent_id, retell_agent_name, retell_call_status,
                 retell_transcript, retell_total_cost, retell_llm_latency_ms,
-                retell_recording_url, call_summary, detailed_call_summary, now, call_id
+                retell_recording_url, call_summary, detailed_call_summary, now, uniqueId
             ]);
             
-            res.json({ ok: true, updated: true, call_id });
+            res.json({ ok: true, updated: true, call_id: uniqueId });
         } else {
             // INSERT
             await pool.query(`
                 INSERT INTO calls (
-                    call_id, from_number, to_number, start_time, end_time,
+                    call_id, retell_call_id, from_number, to_number, start_time, end_time,
                     duration_seconds, direction, status, agent_id, cost_per_minute,
                     retell_agent_id, retell_agent_name, retell_call_status,
                     retell_transcript, retell_total_cost, retell_llm_latency_ms,
                     retell_recording_url, call_summary, detailed_call_summary, created_at, updated_at
                 ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+                    $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
                 )
             `, [
-                call_id, from_number, to_number, start_time, end_time,
+                uniqueId, uniqueId, from_number, to_number, start_time, end_time,
                 duration_seconds, direction, status, agent_id, cost_per_minute,
                 retell_agent_id, retell_agent_name, retell_call_status,
                 retell_transcript, retell_total_cost, retell_llm_latency_ms,
                 retell_recording_url, call_summary, detailed_call_summary, now, now
             ]);
             
-            res.json({ ok: true, created: true, call_id });
+            res.json({ ok: true, created: true, call_id: uniqueId });
         }
     } catch (err) {
         console.error('Insert/Update call error:', err);
