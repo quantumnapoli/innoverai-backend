@@ -426,8 +426,8 @@ function groupCallsByDay(calls) {
     const grouped = {};
     
     calls.forEach(call => {
-        // PRIORITÀ created_at per dati reali (start_time spesso null nel DB)
-        let dateValue = call.created_at || call.start_time || call.end_time;
+        // PRIORITÀ start_time (data reale chiamata) ora che è popolato nel DB
+        let dateValue = call.start_time || call.end_time || call.created_at;
         if (!dateValue) {
             console.warn('⚠️ Chiamata senza data valida, skip:', call.call_id);
             return;
@@ -465,8 +465,8 @@ function groupCostsByDay(calls) {
     const grouped = {};
     
     calls.forEach(call => {
-        // PRIORITÀ created_at per dati reali (start_time spesso null nel DB)
-        let dateValue = call.created_at || call.start_time || call.end_time;
+        // PRIORITÀ start_time (data reale chiamata) ora che è popolato nel DB
+        let dateValue = call.start_time || call.end_time || call.created_at;
         if (!dateValue) {
             console.warn('⚠️ Chiamata senza data valida per costo, skip:', call.call_id);
             return;

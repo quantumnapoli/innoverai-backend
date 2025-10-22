@@ -379,8 +379,8 @@ function createCallTableRow(call, index) {
     const realPrice = call.retell_total_cost || call.total_cost || (callCost * 1.1); // Fallback +10%
     const showRealPrice = isAdminUser();
     
-    // PUNTO 3: Aggiungo data formattata con fallback - priorità created_at per dati reali
-    const callDate = call.created_at || call.start_time || call.end_time;
+    // PUNTO 3: Aggiungo data formattata con fallback - priorità start_time (data reale chiamata)
+    const callDate = call.start_time || call.end_time || call.created_at;
     const displayDate = callDate ? formatDateTime(callDate) : 'N/A';
     
     // PUNTO 4: Stato della chiamata con fallback sicuro - normalizza "ended" → "completed"
