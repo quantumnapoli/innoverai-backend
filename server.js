@@ -449,7 +449,7 @@ app.get('/api/calls', authMiddleware, async (req, res) => {
 // POST /api/calls - Inserisce o aggiorna una chiamata
 app.post('/api/calls', authMiddleware, async (req, res) => {
     try {
-        const {
+            const {
             call_id,
             from_number,
             to_number,
@@ -466,7 +466,9 @@ app.post('/api/calls', authMiddleware, async (req, res) => {
             retell_transcript,
             retell_total_cost,
             retell_llm_latency_ms,
-            retell_recording_url
+            retell_recording_url,
+            call_summary,
+            detailed_call_summary
         } = req.body;
         
         if (!call_id) {
@@ -505,7 +507,7 @@ app.post('/api/calls', authMiddleware, async (req, res) => {
                 direction, status, agent_id, cost_per_minute,
                 retell_agent_id, retell_agent_name, retell_call_status,
                 retell_transcript, retell_total_cost, retell_llm_latency_ms,
-                retell_recording_url, now, call_id
+                retell_recording_url, call_summary, detailed_call_summary, now, call_id
             ]);
             
             res.json({ ok: true, updated: true, call_id });
@@ -517,17 +519,17 @@ app.post('/api/calls', authMiddleware, async (req, res) => {
                     duration_seconds, direction, status, agent_id, cost_per_minute,
                     retell_agent_id, retell_agent_name, retell_call_status,
                     retell_transcript, retell_total_cost, retell_llm_latency_ms,
-                    retell_recording_url, created_at, updated_at
+                    retell_recording_url, call_summary, detailed_call_summary, created_at, updated_at
                 ) VALUES (
                     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                    $11, $12, $13, $14, $15, $16, $17, $18, $19
+                    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
                 )
             `, [
                 call_id, from_number, to_number, start_time, end_time,
                 duration_seconds, direction, status, agent_id, cost_per_minute,
                 retell_agent_id, retell_agent_name, retell_call_status,
                 retell_transcript, retell_total_cost, retell_llm_latency_ms,
-                retell_recording_url, now, now
+                retell_recording_url, call_summary, detailed_call_summary, now, now
             ]);
             
             res.json({ ok: true, created: true, call_id });

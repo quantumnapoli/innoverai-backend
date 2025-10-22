@@ -43,6 +43,9 @@ echo "$RETELL_RESPONSE" | jq -c '.[]' | while read -r call; do
   call_status=$(echo "$call" | jq -r '.call_status // empty')
   transcript=$(echo "$call" | jq -r '.transcript // empty')
   total_cost=$(echo "$call" | jq -r '.total_cost // null')
+  # New fields: call_summary and detailed_call_summary
+  call_summary=$(echo "$call" | jq -r '.call_analysis.call_summary // empty')
+  detailed_call_summary=$(echo "$call" | jq -r '.call_analysis.custom_analysis_data.detailed_call_summary // empty')
 
   # Converti timestamp Retell (millisecondi) in ISO 8601
   # start_timestamp e end_timestamp sono in millisecondi
@@ -87,13 +90,17 @@ echo "$RETELL_RESPONSE" | jq -c '.[]' | while read -r call; do
     --arg agent_name "$agent_name" \
     --arg transcript "$transcript" \
     --argjson retell_total_cost "$total_cost" \
+    --arg call_summary "$call_summary" \
+    --arg detailed_call_summary "$detailed_call_summary" \
     '(
       {call_id:$call_id, from_number:$from_number, to_number:$to_number,
        start_time:(if $start_time=="" then null else $start_time end),
        end_time:(if $end_time=="" then null else $end_time end),
        duration_seconds:$duration_seconds, direction:$direction, status:$status, agent_id:$agent_id,
        cost_per_minute:null, retell_agent_id:$agent_id, retell_agent_name:$agent_name,
-       retell_call_status:$status, retell_transcript:$transcript, retell_total_cost:$retell_total_cost}
+       retell_call_status:$status, retell_transcript:$transcript, retell_total_cost:$retell_total_cost,
+       call_summary:(if $call_summary=="" then null else $call_summary end),
+       detailed_call_summary:(if $detailed_call_summary=="" then null else $detailed_call_summary end)}
     )' )
 
   # POST to backend
