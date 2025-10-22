@@ -420,12 +420,25 @@ function updateDailyCostChart() {
 
 /**
  * Raggruppa le chiamate per giorno
+ * PUNTO 2: Fix per gestire date mancanti o non valide
  */
 function groupCallsByDay(calls) {
     const grouped = {};
     
     calls.forEach(call => {
-        const date = new Date(call.start_time);
+        // Usa start_time, created_at o end_time come fallback
+        const dateValue = call.start_time || call.created_at || call.end_time;
+        if (!dateValue) {
+            console.warn('⚠️ Chiamata senza data valida, skip:', call.call_id);
+            return;
+        }
+        
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) {
+            console.warn('⚠️ Data non valida per chiamata:', call.call_id, dateValue);
+            return;
+        }
+        
         const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
         
         if (!grouped[dateKey]) {
@@ -439,23 +452,35 @@ function groupCallsByDay(calls) {
 
 /**
  * Raggruppa i costi per giorno
+ * PUNTO 2: Fix per gestire date mancanti e calcolare correttamente i costi
  */
 function groupCostsByDay(calls) {
     const grouped = {};
     
     calls.forEach(call => {
-        // Calcola costo solo per chiamate completate
-        if (call.status !== 'completed') return;
+        // Usa start_time, created_at o end_time come fallback
+        const dateValue = call.start_time || call.created_at || call.end_time;
+        if (!dateValue) {
+            console.warn('⚠️ Chiamata senza data valida per costo, skip:', call.call_id);
+            return;
+        }
         
-        const date = new Date(call.start_time);
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) {
+            console.warn('⚠️ Data non valida per costo chiamata:', call.call_id, dateValue);
+            return;
+        }
+        
         const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
         
         if (!grouped[dateKey]) {
             grouped[dateKey] = 0;
         }
         
-        const durationMinutes = call.duration_seconds / 60;
-        const cost = durationMinutes * dashboardState.currentCostPerMinute;
+        // Calcola costo basandosi su duration_seconds e costo al minuto
+        const durationMinutes = (call.duration_seconds || 0) / 60;
+        const costPerMinute = dashboardState.currentCostPerMinute || 0.20;
+        const cost = durationMinutes * costPerMinute;
         grouped[dateKey] += cost;
     });
     

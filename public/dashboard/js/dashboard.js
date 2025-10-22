@@ -238,7 +238,8 @@ async function loadCallsDataLocal() {
 
         headers['Authorization'] = `Bearer ${token}`;
 
-        const response = await fetch(`${apiUrl}/api/calls?limit=${DASHBOARD_CONFIG.MAX_RECORDS_PER_PAGE}`, {
+        // PUNTO 1: Rimuovo il limite per prendere TUTTE le chiamate per i grafici
+        const response = await fetch(`${apiUrl}/api/calls`, {
             headers
         });
 
@@ -378,23 +379,30 @@ function createCallTableRow(call, index) {
     const realPrice = call.retell_total_cost || call.total_cost || (callCost * 1.1); // Fallback +10%
     const showRealPrice = isAdminUser();
     
+    // PUNTO 3: Aggiungo data formattata con fallback
+    const callDate = call.start_time || call.created_at || call.end_time;
+    const displayDate = callDate ? formatDateTime(callDate) : 'N/A';
+    
+    // PUNTO 4: Stato della chiamata con fallback sicuro
+    const callStatus = call.status || call.retell_call_status || 'unknown';
+    
     row.innerHTML = `
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-            ${escapeHtml(call.from_number)}
+            ${escapeHtml(call.from_number || 'N/A')}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-            ${formattedDate}
+            ${displayDate}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
             <div class="flex flex-col">
                 <span class="font-medium">${durationMinutes.toLocaleString('it-IT', { minimumFractionDigits: 2 })} min</span>
-                <span class="text-xs text-gray-500">${call.duration_seconds}s</span>
+                <span class="text-xs text-gray-500">${call.duration_seconds || 0}s</span>
             </div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-            <span class="status-badge status-${call.status}">
-                <i class="fas ${getStatusIcon(call.status)} mr-1"></i>
-                ${getStatusLabel(call.status)}
+            <span class="status-badge status-${callStatus}">
+                <i class="fas ${getStatusIcon(callStatus)} mr-1"></i>
+                ${getStatusLabel(callStatus)}
             </span>
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -402,6 +410,11 @@ function createCallTableRow(call, index) {
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
             ${showRealPrice ? `<span class="font-semibold text-green-600">€${realPrice.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</span>` : `<span class="text-sm text-gray-400">-</span>`}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <button onclick="showConversationModal(${index})" class="text-blue-600 hover:text-blue-800 font-medium">
+                <i class="fas fa-comments mr-1"></i> Vedi
+            </button>
         </td>
     `;
     
@@ -1165,6 +1178,102 @@ async function loadUsersList() {
         
     } catch (error) {
         console.error('Error loading users:', error);
+    }
+}
+
+/**
+ * PUNTO 5: Mostra modal con conversazione
+ */
+function showConversationModal(index) {
+    const call = dashboardState.filteredData[index];
+    if (!call) {
+        console.error('Chiamata non trovata:', index);
+        return;
+    }
+    
+    // Ottieni il transcript dalla chiamata
+    const transcript = call.retell_transcript || call.transcript || 'Nessuna trascrizione disponibile per questa chiamata.';
+    
+    // Crea il modal se non esiste
+    let modal = document.getElementById('conversationModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'conversationModal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden';
+        modal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-gray-900">
+                        <i class="fas fa-comments mr-2 text-blue-600"></i>
+                        Conversazione
+                    </h3>
+                    <button onclick="closeConversationModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Da:</span>
+                            <span class="font-medium ml-2" id="modalFromNumber"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Data:</span>
+                            <span class="font-medium ml-2" id="modalDate"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Durata:</span>
+                            <span class="font-medium ml-2" id="modalDuration"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Stato:</span>
+                            <span class="font-medium ml-2" id="modalStatus"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto px-6 py-4">
+                    <div id="modalTranscript" class="text-gray-700 whitespace-pre-wrap leading-relaxed"></div>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                    <button onclick="closeConversationModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Chiudi
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Click fuori dal modal per chiudere
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeConversationModal();
+            }
+        });
+    }
+    
+    // Popola i dati del modal
+    const callDate = call.start_time || call.created_at || call.end_time;
+    const displayDate = callDate ? formatDateTime(callDate) : 'N/A';
+    const durationMinutes = Math.round((call.duration_seconds / 60) * 100) / 100;
+    const callStatus = call.status || call.retell_call_status || 'unknown';
+    
+    document.getElementById('modalFromNumber').textContent = call.from_number || 'N/A';
+    document.getElementById('modalDate').textContent = displayDate;
+    document.getElementById('modalDuration').textContent = `${durationMinutes} min (${call.duration_seconds || 0}s)`;
+    document.getElementById('modalStatus').textContent = getStatusLabel(callStatus);
+    document.getElementById('modalTranscript').textContent = transcript;
+    
+    // Mostra il modal
+    modal.classList.remove('hidden');
+}
+
+/**
+ * Chiude modal conversazione
+ */
+function closeConversationModal() {
+    const modal = document.getElementById('conversationModal');
+    if (modal) {
+        modal.classList.add('hidden');
     }
 }
 
