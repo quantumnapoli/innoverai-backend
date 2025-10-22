@@ -551,11 +551,18 @@ app.delete('/api/calls', authMiddleware, async (req, res) => {
 // Expose a small safe configuration object to the frontend (no secrets)
 app.get('/config', (req, res) => {
     try {
+        // Build canonical base URL for API/APP. Prefer explicit BASE_URL_APP, then service URL, then public domain.
+        let baseHost = process.env.BASE_URL_APP || process.env.RAILWAY_SERVICE_INNOVERAI_URL || process.env.RAILWAY_PUBLIC_DOMAIN || null;
+        if (baseHost && !baseHost.startsWith('http')) {
+            // If it's just a domain (e.g. api.innoverai.com), prefix with https://
+            baseHost = `https://${baseHost}`;
+        }
+
         const safeConfig = {
-            // Prefer explicit BASE_URL_APP or Railway public domain. NEVER expose DATABASE_URL here.
-            API_URL: process.env.BASE_URL_APP || process.env.RAILWAY_PUBLIC_DOMAIN || null,
+            // API_URL: public API base URL (with scheme)
+            API_URL: baseHost,
             RETELL_BASE_URL: process.env.RETELL_BASE_URL || 'https://api.retellai.com',
-            BASE_URL_APP: process.env.BASE_URL_APP || process.env.RAILWAY_PUBLIC_DOMAIN || null
+            BASE_URL_APP: baseHost
             // NOTE: do NOT expose RETELL_API_KEY or SERVICE_API_KEY here
         };
         res.json(safeConfig);
