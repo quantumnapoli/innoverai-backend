@@ -54,13 +54,33 @@ app.use(express.json());
 
 // Serve static frontend in production if present
 const path = require('path');
+const fs = require('fs');
 // Prefer serving static files from server/public for landing page
 const frontendDist = path.join(__dirname, 'public');
+
+// Host configuration for dashboard (allows dashboard.innoverai.com to serve the dashboard
+// files while landing remains on the root domain). Can be overridden via env.
+const DASHBOARD_HOST = process.env.DASHBOARD_HOST || 'dashboard.innoverai.com';
+const dashboardDist = path.join(__dirname, 'public', 'dashboard');
+
 // Auto-detect presence of index.html and enable static serving in production or when explicitly enabled
 try {
-    const indexExists = require('fs').existsSync(path.join(frontendDist, 'index.html'));
+    const indexExists = fs.existsSync(path.join(frontendDist, 'index.html'));
     if (indexExists && (process.env.SERVE_STATIC === 'true' || process.env.NODE_ENV === 'production')) {
         console.log('📦 Serving frontend static files from', frontendDist);
+
+        // If a request comes for the dashboard host, serve the dashboard static files
+        if (fs.existsSync(dashboardDist)) {
+            app.use((req, res, next) => {
+                const host = (req.headers.host || '').split(':')[0];
+                if (host === DASHBOARD_HOST) {
+                    return express.static(dashboardDist)(req, res, next);
+                }
+                return next();
+            });
+        }
+
+        // Default static for landing / other hosts
         app.use(express.static(frontendDist));
     } else {
         console.log('ℹ️ Frontend index.html not found or static serving not enabled (SERVE_STATIC not set / not production)');
