@@ -106,10 +106,16 @@
     </div>
 
     <script>
-        // Backend API endpoint (change to your Railway URL in production)
-        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-            ? 'http://localhost:8080' 
-            : 'https://innoverai.com'; // Update this after Railway deploy
+        // Backend API endpoint - dynamically determine based on environment
+        function getLoginAPIUrl() {
+            // Local development
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                return 'http://localhost:8080';
+            }
+            // Production: use backend Railway URL (not landing page)
+            return 'https://innoverai-backend-production.up.railway.app';
+        }
+        const API_BASE_URL = getLoginAPIUrl();
 
         // Fallback credentials for local dev (if backend not available)
         const VALID_CREDENTIALS = window.AUTH_CONFIG ? window.AUTH_CONFIG.USERS : {
