@@ -57,6 +57,7 @@ app.use(express.json());
 // Serve static frontend in production if present
 const path = require('path');
 const fs = require('fs');
+const fs = require('fs');
 // Prefer serving static files from server/public for landing page
 const frontendDist = path.join(__dirname, 'public');
 
@@ -500,8 +501,10 @@ app.post('/api/calls', authMiddleware, async (req, res) => {
                     retell_total_cost = $14,
                     retell_llm_latency_ms = $15,
                     retell_recording_url = $16,
-                    updated_at = $17
-                WHERE call_id = $18
+                    call_summary = $17,
+                    detailed_call_summary = $18,
+                    updated_at = $19
+                WHERE call_id = $20
             `, [
                 from_number, to_number, start_time, end_time, duration_seconds,
                 direction, status, agent_id, cost_per_minute,
@@ -576,6 +579,30 @@ app.get('/config', (req, res) => {
     } catch (err) {
         console.error('Config endpoint error:', err);
         res.status(500).json({ error: 'Unable to read config' });
+    }
+});
+
+// Admin-only endpoint to run migrations present in migrations/ directory
+app.post('/admin/run-migrations', authMiddleware, async (req, res) => {
+    try {
+        if (!req.user || req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Only admin can run migrations' });
+        }
+
+        const migrationsDir = path.join(__dirname, 'migrations');
+        const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
+        for (const file of files) {
+            const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+            if (!sql || sql.trim().length === 0) continue;
+            console.log(`🛠 Running migration: ${file}`);
+            // Run statements - may contain multiple commands
+            await pool.query(sql);
+        }
+
+        res.json({ ok: true, ran: files });
+    } catch (err) {
+        console.error('Migration run error:', err);
+        res.status(500).json({ error: 'Migration failed', details: err.message });
     }
 });
 
