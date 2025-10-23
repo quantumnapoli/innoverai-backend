@@ -817,8 +817,13 @@ try {
     const indexExists = require('fs').existsSync(path.join(frontendDist, 'index.html'));
     if (indexExists && (process.env.SERVE_STATIC === 'true' || process.env.NODE_ENV === 'production')) {
         app.get('*', (req, res) => {
-            // Don't serve index.html for API routes
-            if (req.path.startsWith('/api/') || req.path === '/health' || req.path === '/config') {
+            // Don't serve index.html for API routes or static files
+            if (req.path.startsWith('/api/') || 
+                req.path === '/health' || 
+                req.path === '/config' ||
+                req.path.startsWith('/public/') ||
+                req.path.startsWith('/assets/') ||
+                req.path.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|css|js|json)$/i)) {
                 return res.status(404).json({ error: 'Not found' });
             }
             const indexPath = path.join(frontendDist, 'index.html');
