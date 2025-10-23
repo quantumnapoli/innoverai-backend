@@ -816,7 +816,7 @@ app.get('/health', (req, res) => res.json({ ok: true }));
 try {
     const indexExists = require('fs').existsSync(path.join(frontendDist, 'index.html'));
     if (indexExists && (process.env.SERVE_STATIC === 'true' || process.env.NODE_ENV === 'production')) {
-        app.get('*', (req, res) => {
+        app.get('*', (req, res, next) => {
             // Don't serve index.html for API routes or static files
             const pathStr = req.path || '';
             
@@ -830,15 +830,15 @@ try {
                 return res.status(404).json({ error: 'Not found' });
             }
             
-            // Exclude static directories (these are handled by express.static above)
+            // Exclude static directories (pass through to express.static middleware above)
             if (pathStr.startsWith('/public/') || pathStr.startsWith('/assets/') || pathStr.startsWith('/dashboard/')) {
-                return res.status(404).json({ error: 'Not found' });
+                return next();
             }
             
             // Exclude common static file extensions
             const staticExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico', '.css', '.js', '.json', '.woff', '.woff2', '.ttf', '.eot'];
             if (staticExtensions.some(ext => pathStr.toLowerCase().endsWith(ext))) {
-                return res.status(404).json({ error: 'Not found' });
+                return next();
             }
             
             const indexPath = path.join(frontendDist, 'index.html');
