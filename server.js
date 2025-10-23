@@ -818,14 +818,29 @@ try {
     if (indexExists && (process.env.SERVE_STATIC === 'true' || process.env.NODE_ENV === 'production')) {
         app.get('*', (req, res) => {
             // Don't serve index.html for API routes or static files
-            if (req.path.startsWith('/api/') || 
-                req.path === '/health' || 
-                req.path === '/config' ||
-                req.path.startsWith('/public/') ||
-                req.path.startsWith('/assets/') ||
-                req.path.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|css|js|json)$/i)) {
+            const pathStr = req.path || '';
+            
+            // Exclude API routes
+            if (pathStr.startsWith('/api/')) {
                 return res.status(404).json({ error: 'Not found' });
             }
+            
+            // Exclude specific routes
+            if (pathStr === '/health' || pathStr === '/config') {
+                return res.status(404).json({ error: 'Not found' });
+            }
+            
+            // Exclude static directories (these are handled by express.static above)
+            if (pathStr.startsWith('/public/') || pathStr.startsWith('/assets/') || pathStr.startsWith('/dashboard/')) {
+                return res.status(404).json({ error: 'Not found' });
+            }
+            
+            // Exclude common static file extensions
+            const staticExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico', '.css', '.js', '.json', '.woff', '.woff2', '.ttf', '.eot'];
+            if (staticExtensions.some(ext => pathStr.toLowerCase().endsWith(ext))) {
+                return res.status(404).json({ error: 'Not found' });
+            }
+            
             const indexPath = path.join(frontendDist, 'index.html');
             res.sendFile(indexPath);
         });
