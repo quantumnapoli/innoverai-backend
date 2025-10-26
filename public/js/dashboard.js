@@ -329,6 +329,13 @@ function updateCallsTable() {
     // Genera righe della tabella con divisori per giorno
     sortedData.forEach((call, index) => {
         const callDate = new Date(call.start_time || call.created_at);
+        
+        // Verifica se la data è valida
+        if (isNaN(callDate.getTime())) {
+            console.warn('⚠️ Data invalida per call:', call);
+            return; // Salta questa riga
+        }
+        
         const dayKey = callDate.toLocaleDateString('it-IT', { year: 'numeric', month: '2-digit', day: '2-digit' });
         
         // Se il giorno è cambiato, aggiungi un divisore
@@ -342,7 +349,7 @@ function updateCallsTable() {
             const capitalizedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
             
             divider.innerHTML = `
-                <td colspan="8" class="px-6 py-3">
+                <td colspan="6" class="px-6 py-3">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-calendar-day text-blue-600"></i>
                         <span class="font-semibold text-gray-700">${capitalizedDay}</span>
@@ -367,55 +374,36 @@ function createCallTableRow(call, index) {
     row.className = 'table-row';
     
     // Calcoli per la riga
-    const durationMinutes = Math.round((call.duration_seconds / 60) * 100) / 100;
-    const callCost = Math.round(durationMinutes * dashboardState.currentCostPerMinute * 100) / 100;
-    const formattedDate = formatDateTime(call.start_time);
+    const durationMinutes = call.duration_seconds ? Math.floor(call.duration_seconds / 60) : 0;
+    const durationSeconds = call.duration_seconds ? Math.round(call.duration_seconds % 60) : 0;
+    const callCost = call.duration_seconds ? Math.round((call.duration_seconds / 60) * dashboardState.currentCostPerMinute * 100) / 100 : 0;
+    const formattedDate = call.start_time ? formatDateTime(call.start_time) : (call.created_at ? formatDateTime(call.created_at) : '--');
     
     row.innerHTML = `
-        <td class=\"px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900\">
-            ${escapeHtml(call.call_id || call.id)}
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            ${escapeHtml(call.from_number || '--')}
         </td>
-        <td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-900\">
-            ${escapeHtml(call.from_number)}
-        </td>
-        <td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-900\">
-            ${escapeHtml(call.to_number)}
-        </td>
-        <td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-900\">
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
             ${formattedDate}
         </td>
-        <td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-900\">
-            <div class=\"flex flex-col\">
-                <span class=\"font-medium\">${durationMinutes.toLocaleString('it-IT', { minimumFractionDigits: 2 })} min</span>
-                <span class=\"text-xs text-gray-500\">${call.duration_seconds}s</span>
-            </div>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            ${durationMinutes}m ${durationSeconds}s
         </td>
-        <td class=\"px-6 py-4 whitespace-nowrap\">
-            <span class=\"direction-badge ${call.direction === 'inbound' ? 'direction-inbound' : 'direction-outbound'}\">
-                <i class=\"fas ${call.direction === 'inbound' ? 'fa-arrow-down' : 'fa-arrow-up'} mr-1\"></i>
-                ${call.direction === 'inbound' ? 'Inbound' : 'Outbound'}
-            </span>
-        </td>
-        <td class=\"px-6 py-4 whitespace-nowrap\">
-            <span class=\"status-badge status-${call.status}\">
-                <i class=\"fas ${getStatusIcon(call.status)} mr-1\"></i>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="status-badge status-${call.status || 'unknown'}">
+                <i class="fas ${getStatusIcon(call.status)} mr-1"></i>
                 ${getStatusLabel(call.status)}
             </span>
         </td>
-        <td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-900\">
-            <span class=\"cost-value\">€${callCost.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</span>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            €${callCost.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">
+            <button onclick="showConversationModal(${index})" class="text-blue-600 hover:text-blue-900">
+                <i class="fas fa-eye mr-1"></i>Dettagli
+            </button>
         </td>
     `;
-    
-    // Applica animazione con ritardo per effetto cascata
-    setTimeout(() => {
-        row.style.opacity = '0';
-        row.style.transform = 'translateY(20px)';
-        row.offsetHeight; // Force reflow
-        row.style.transition = 'all 0.3s ease';
-        row.style.opacity = '1';
-        row.style.transform = 'translateY(0)';
-    }, index * 50);
     
     return row;
 }
@@ -998,10 +986,13 @@ async function handleLoadDemo() {
  * Gestisce il logout dell'utente
  */
 function handleLogout() {
+    console.log('👋 Logout initiated...');
+    const sessionKey = window.AUTH_CONFIG?.SESSION?.KEY || 'innoverAISession';
+    localStorage.removeItem(sessionKey);
     localStorage.removeItem('innoverAIToken');
     window.location.href = '/login.html';
-    showNotification('Logout effettuato con successo', 'info');
 }
 
 // Funzioni di utilità utilizzate nel codice
+// (Queste funzioni sono definite in utils.js)
 // (Queste funzioni sono definite in utils.js)
