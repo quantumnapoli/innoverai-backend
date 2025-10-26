@@ -73,23 +73,20 @@ try {
 
         // If a request comes for the dashboard host, serve the dashboard static files
         if (fs.existsSync(dashboardDist)) {
-            // If root path requested on dashboard host, serve dashboard index directly
-            app.use((req, res, next) => {
-                const host = (req.headers.host || '').split(':')[0];
-                if (host === DASHBOARD_HOST && (req.path === '/' || req.path === '')) {
-                    return res.sendFile(path.join(dashboardDist, 'index.html'));
-                }
-                return next();
+            // Serve the dashboard as the backend root (dashboard is the home page for this service)
+            // Serve static assets from dashboardDist at root and ensure index.html is returned for '/'
+            app.use(express.static(dashboardDist));
+
+            // Explicit route for root to serve dashboard index
+            app.get('/', (req, res) => {
+                return res.sendFile(path.join(dashboardDist, 'index.html'));
             });
 
-            // Serve other static assets from dashboard dist when host matches
-            app.use((req, res, next) => {
-                const host = (req.headers.host || '').split(':')[0];
-                if (host === DASHBOARD_HOST) {
-                    return express.static(dashboardDist)(req, res, next);
-                }
-                return next();
-            });
+            // Redirect /dashboard to root for convenience
+            app.get('/dashboard', (req, res) => res.redirect('/'));
+
+            // Let express.static handle other dashboard asset requests under /dashboard/* by mapping to dashboardDist
+            app.use('/dashboard', express.static(dashboardDist));
         }
 
         // Default static for landing / other hosts
