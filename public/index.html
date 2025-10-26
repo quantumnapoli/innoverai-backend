@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INNOVERAI - Dashboard Analytics</title>
+    
+    <!-- Tailwind CSS per styling moderno e responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js per grafici interattivi -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome per le icone -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts per tipografia moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1L2Y0GVP80"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-1L2Y0GVP80');
+    </script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Configurazione Dashboard -->
+    <script src="config.js"></script>
+    
+    <!-- Configurazione e Dati Demo -->
+    <script>
+        // Carica configurazione inline per evitare problemi di path
+        window.AUTH_CONFIG = {
+            USERS: {
+                'demo': { password: 'demo', role: 'demo', name: 'Utente Demo' },
+                'admin': { password: 'jament78#@', role: 'admin', name: 'Admin' },
+                'marco': { password: 'esposito2025', role: 'client', name: 'Marco Esposito', agent_id: 'agent_0c73985e38f6110dbec24596c1' }
+            },
+            SESSION: {
+                KEY: 'innoverAISession',
+                DURATION: 24 * 60 * 60 * 1000
+            }
+        };
+        window.RETELL_CONFIG = {
+            BASE_URL: 'https://api.retellai.com',
+            API_KEY: '',
+            AGENT_ID: ''
+        };
+        window.API_BASE_URL = '';
+
+        // Try to populate runtime config from backend /config endpoint
+        // NOTE: do not blindly accept domains that are known to cause CORS preflight redirects
+        (async function(){
+            try {
+                const resp = await fetch('/config');
+                if (!resp.ok) return;
+                const cfg = await resp.json();
+                // Only non-secret values are returned by the server
+                if (cfg.RETELL_BASE_URL) window.RETELL_CONFIG.BASE_URL = cfg.RETELL_BASE_URL;
+                // Accept BASE_URL_APP only if it does not point to the problematic api host
+                if (cfg.BASE_URL_APP && !cfg.BASE_URL_APP.includes('api.innoverai.com')) {
+                    window.API_BASE_URL = cfg.BASE_URL_APP;
+                } else {
+                    console.warn('⚠️ Skipping BASE_URL_APP from /config because it points to api.innoverai.com or is empty. Using client config fallback.');
+                }
+                if (cfg.API_URL && !window.API_BASE_URL) window.API_BASE_URL = cfg.API_URL;
+                console.log('🔒 Runtime config loaded from /config');
+            } catch (e) {
+                console.warn('⚠️ Could not load /config:', e.message);
+            }
+        })();
+    </script>
+    <script src="js/demo-data.js"></script>
+    
+    <style>
+        /* Configurazione Tailwind personalizzata */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Authentication Check -->
+    <script>
+        // Controllo autenticazione sicuro
+        function checkAuthentication() {
+            try {
+                const sessionKey = window.AUTH_CONFIG ? window.AUTH_CONFIG.SESSION.KEY : 'innoverAISession';
+                const session = localStorage.getItem(sessionKey);
+                console.log('🔐 Checking authentication, session:', session ? 'found' : 'not found');
+                
+                if (!session) {
+                    console.log('❌ No session found, redirecting to login');
+                    setTimeout(() => window.location.href = 'login.html', 100);
+                    return false;
+                }
+                
+                const sessionData = JSON.parse(session);
+                const now = Date.now();
+                
+                if (!sessionData.expires || now > sessionData.expires) {
+                    console.log('❌ Session expired, redirecting to login');
+                    localStorage.removeItem(sessionKey);
+                    setTimeout(() => window.location.href = 'login.html', 100);
+                    return false;
+                }
+                
+                console.log('✅ Authentication successful, user:', sessionData.name || sessionData.username);
+                
+                // Aggiorna header con info utente
+                updateHeaderWithUserInfo(sessionData);
+                
+                return true;
+            } catch (e) {
+                console.error('❌ Authentication error:', e);
+                const sessionKey = window.AUTH_CONFIG ? window.AUTH_CONFIG.SESSION.KEY : 'innoverAISession';
+                localStorage.removeItem(sessionKey);
+                setTimeout(() => window.location.href = 'login.html', 100);
+                return false;
+            }
+        }
+        
+        // Aggiorna header con informazioni utente
+        function updateHeaderWithUserInfo(sessionData) {
+            const headerTitle = document.querySelector('header h1');
+            if (headerTitle && sessionData.role === 'demo') {
+                headerTitle.textContent = 'INNOVERAI Dashboard - Modalità Demo';
+            }
+        }
+        
+        // Esegui controllo quando il DOM è pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkAuthentication);
+        } else {
+            checkAuthentication();
+        }
+    </script>
+
+    <!-- Header con logo e titolo -->
+    <header class="bg-blue-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <img id="dashboardLogo" src="/assets/logowhite-tr.webp" data-white-src="/assets/logowhite-tr.webp" data-blue-src="../assets/logoblue.webp" alt="INNOVERAI" class="h-8 mr-3" />
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Stato connessione Retell -->
+                    <div class="flex items-center">
+                        <div id="retellStatus" class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                        <span class="text-sm" id="retellStatusText">Retell: Disconnesso</span>
+                    </div>
+                    <!-- Pulsante sync manuale Retell -->
+                    <button id="syncRetellBtn" class="bg-green-500 hover:bg-green-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        <i class="fas fa-sync-alt mr-2"></i>Sync Retell
+                    </button>
+                    <!-- Indicatore di ultimo aggiornamento -->
+                    <span class="text-sm" id="lastUpdate">Ultimo aggiornamento: --</span>
+                    <!-- Pulsante logout -->
+                    <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-md text-sm font-medium transition-colors ml-4">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Sezione filtri -->
+        <div class="mb-6">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                        <i class="fas fa-filter mr-2"></i>Filtri Ricerca
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <!-- Filtro data inizio -->
+                        <div>
+                            <label for="startDate" class="block text-sm font-medium text-gray-700">Data Inizio</label>
+                            <input type="date" id="startDate" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        
+                        <!-- Filtro data fine -->
+                        <div>
+                            <label for="endDate" class="block text-sm font-medium text-gray-700">Data Fine</label>
+                            <input type="date" id="endDate" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        
+                        <!-- Filtro tipo chiamata -->
+                        <div>
+                            <label for="callDirection" class="block text-sm font-medium text-gray-700">Tipo Chiamata</label>
+                            <select id="callDirection" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                <option value="">Tutti</option>
+                                <option value="inbound">Inbound</option>
+                                <option value="outbound">Outbound</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Filtro stato -->
+                        <div>
+                            <label for="callStatus" class="block text-sm font-medium text-gray-700">Stato</label>
+                            <select id="callStatus" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                <option value="">Tutti</option>
+                                <option value="completed">Completate</option>
+                                <option value="failed">Fallite</option>
+                                <option value="in_progress">In Corso</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex justify-between">
+                        <div class="flex space-x-2">
+                            <button id="applyFilters" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                <i class="fas fa-search mr-2"></i>Applica Filtri
+                            </button>
+                            <button id="showAllDataBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                <i class="fas fa-eye mr-2"></i>Mostra Tutti
+                            </button>
+                        </div>
+                        <button id="resetFilters" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                            <i class="fas fa-undo mr-2"></i>Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione metriche riepilogative -->
+        <div class="mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Totale chiamate -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-phone text-2xl text-blue-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Totale Chiamate</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="totalCalls">0</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Totale minuti -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-clock text-2xl text-green-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Totale Minuti</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="totalMinutes">0.00</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Costo totale -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-euro-sign text-2xl text-yellow-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Costo Totale</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="totalCost">€0.00</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Durata media -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-chart-line text-2xl text-purple-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Durata Media</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="averageDuration">0.00 min</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione grafici -->
+        <div class="mb-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Grafico chiamate per giorno -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            <i class="fas fa-chart-bar mr-2"></i>Chiamate per Giorno
+                        </h3>
+                        <div style="height: 400px;">
+                            <canvas id="dailyCallsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grafico costo giornaliero -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            <i class="fas fa-chart-line mr-2"></i>Costo Giornaliero
+                        </h3>
+                        <div style="height: 400px;">
+                            <canvas id="dailyCostChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione impostazioni (nascosta) -->
+        <div class="mb-6 hidden">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                        <i class="fas fa-cog mr-2"></i>Impostazioni
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Impostazioni Costo -->
+                        <div>
+                            <h4 class="text-md font-medium text-gray-800 mb-2">Costi</h4>
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <label for="costPerMinute" class="block text-sm font-medium text-gray-700">Costo per Minuto (€)</label>
+                                    <input type="number" id="costPerMinute" step="0.01" value="0.20" min="0" class="mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div class="mt-6">
+                                    <button id="updateCostBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                        <i class="fas fa-save mr-2"></i>Aggiorna Costi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Impostazioni Retell API -->
+                        <div>
+                            <h4 class="text-md font-medium text-gray-800 mb-2">VocalsAI API</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label for="retellApiKey" class="block text-sm font-medium text-gray-700">API Key</label>
+                                    <input type="password" id="retellApiKey" placeholder="key_..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="retellAgentId" class="block text-sm font-medium text-gray-700">Agent ID (opzionale)</label>
+                                    <input type="text" id="retellAgentId" placeholder="agent_..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <button id="updateRetellBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                    <i class="fas fa-key mr-2"></i>Aggiorna Configurazione
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabella principale chiamate -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        <i class="fas fa-table mr-2"></i>Elenco Chiamate
+                    </h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500" id="callsCount">0 chiamate trovate</p>
+                </div>
+                <button id="exportCsvBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    <i class="fas fa-download mr-2"></i>Esporta CSV
+                </button>
+            </div>
+            
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="px-4 py-5 text-center">
+                <i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i>
+                <p class="mt-2 text-gray-600">Caricamento dati in corso...</p>
+            </div>
+            
+            <!-- Tabella responsive -->
+            <div id="callsTableContainer" class="overflow-x-auto hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Numero Chiamante</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data e Ora</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durata</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stato</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="callsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- I dati delle chiamate verranno inseriti qui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Empty state -->
+            <div id="emptyState" class="px-4 py-8 text-center hidden">
+                <i class="fas fa-phone-slash text-4xl text-gray-400 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Nessuna chiamata trovata</h3>
+                <p class="text-gray-600">Modifica i filtri di ricerca per visualizzare i dati.</p>
+            </div>
+        </div>
+
+        <!-- Admin Area (Hidden by default, visible only to admin users) -->
+        <div id="adminArea" class="hidden bg-white shadow rounded-lg p-6 mt-6" style="display: none;">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">
+                <i class="fas fa-user-shield mr-2"></i>Admin Panel - Gestione Utenti
+            </h3>
+            
+            <!-- User creation form -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <h4 class="font-semibold text-gray-800 mb-3">Crea Nuovo Utente</h4>
+                <form id="createUserForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <input type="text" id="newUsername" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="newPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                        <input type="text" id="newName" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ruolo</label>
+                        <select id="newRole" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="client">Client</option>
+                            <option value="admin">Admin</option>
+                            <option value="demo">Demo</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Agent ID (opzionale)</label>
+                        <input type="text" id="newAgentId" placeholder="agent_..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+                            <i class="fas fa-user-plus mr-2"></i>Crea Utente
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Users list -->
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 mb-3">Utenti Esistenti</h4>
+                <div id="usersList" class="space-y-2">
+                    <!-- Users will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript per funzionalità dinamiche -->
+    <script>
+        // Cambia il logo del dashboard se lo sfondo dell'header diventa chiaro
+        (function() {
+            const dashboardHeader = document.querySelector('header');
+            const dashboardLogo = document.getElementById('dashboardLogo');
+
+            function updateDashboardLogo() {
+                if (!dashboardHeader || !dashboardLogo) return;
+                const bg = dashboardHeader.style.background || window.getComputedStyle(dashboardHeader).backgroundColor;
+                if (bg && (bg.includes('255') || bg.includes('rgb(255') || bg.includes('#fff') || bg.includes('rgba(255'))) {
+                    dashboardLogo.src = dashboardLogo.getAttribute('data-blue-src');
+                } else {
+                    dashboardLogo.src = dashboardLogo.getAttribute('data-white-src');
+                }
+            }
+
+            window.addEventListener('scroll', updateDashboardLogo);
+            document.addEventListener('DOMContentLoaded', updateDashboardLogo);
+            // initial
+            updateDashboardLogo();
+        })();
+    </script>
+    <script src="js/utils.js"></script>
+    <script src="js/retell-direct-test.js"></script>
+    <script src="js/retell-connector.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/charts.js"></script>
+</body>
+</html>
