@@ -443,7 +443,13 @@ function groupCallsByDay(calls) {
     const grouped = {};
     
     calls.forEach(call => {
-        const date = new Date(call.start_time);
+        // Use start_time, fallback to end_time, then created_at
+        const timeValue = call.start_time || call.end_time || call.created_at;
+        if (!timeValue) return; // Skip if no valid date
+        
+        const date = new Date(timeValue);
+        if (isNaN(date.getTime())) return; // Skip invalid dates
+        
         const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
         
         if (!grouped[dateKey]) {
@@ -465,7 +471,13 @@ function groupCostsByDay(calls) {
         // Calcola costo solo per chiamate completate
         if (call.status !== 'completed') return;
         
-        const date = new Date(call.start_time);
+        // Use start_time, fallback to end_time, then created_at
+        const timeValue = call.start_time || call.end_time || call.created_at;
+        if (!timeValue) return; // Skip if no valid date
+        
+        const date = new Date(timeValue);
+        if (isNaN(date.getTime())) return; // Skip invalid dates
+        
         const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
         
         if (!grouped[dateKey]) {

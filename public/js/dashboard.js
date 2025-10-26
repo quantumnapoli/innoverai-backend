@@ -51,6 +51,30 @@ let dashboardState = {
 };
 
 /**
+ * Helper per ottenere il token JWT dalla sessione corrente
+ * @returns {string|null} Token JWT o null se non disponibile
+ */
+function getAuthToken() {
+    try {
+        // Try window.currentSession first (set on initialization)
+        if (window.currentSession && window.currentSession.token) {
+            return window.currentSession.token;
+        }
+        
+        // Fallback: read from localStorage
+        const sessionKey = window.AUTH_CONFIG?.SESSION?.KEY || 'innoverAISession';
+        const session = localStorage.getItem(sessionKey);
+        if (!session) return null;
+        
+        const sessionData = JSON.parse(session);
+        return sessionData.token || null;
+    } catch (e) {
+        console.error('❌ Errore recupero token:', e);
+        return null;
+    }
+}
+
+/**
  * Inizializzazione della dashboard al caricamento della pagina
  */
 document.addEventListener('DOMContentLoaded', function() {
@@ -72,8 +96,8 @@ document.addEventListener('DOMContentLoaded', function() {
             throw new Error('Token non trovato nella sessione');
         }
         
-        // Salva il token dove lo cercano gli altri script
-        localStorage.setItem('innoverAIToken', JSON.parse(session).token);
+        // Store session data globally for easy access
+        window.currentSession = sessionData;
         
         console.log('✅ Autenticazione verificata per:', sessionData.name || sessionData.username);
     } catch (e) {
@@ -202,10 +226,12 @@ async function loadCallsDataLocal() {
     try {
         console.log('📡 Caricamento dati chiamate locali...');
         
-        // Ottieni JWT token dalla sessione
-        const token = localStorage.getItem('innoverAIToken');
+        // Ottieni JWT token dalla sessione usando helper unificato
+        const token = getAuthToken();
         if (!token) {
-            throw new Error('Non autenticato. Esegui il login.');
+            console.error('❌ Token non disponibile');
+            window.location.href = '/login.html';
+            return;
         }
         
         // Costruisci URL API
@@ -222,7 +248,9 @@ async function loadCallsDataLocal() {
         
         if (response.status === 401) {
             console.log('Token scaduto, redirect a login');
-            localStorage.removeItem('innoverAIToken');
+            const sessionKey = window.AUTH_CONFIG?.SESSION?.KEY || 'innoverAISession';
+            localStorage.removeItem(sessionKey);
+            if (window.currentSession) delete window.currentSession;
             window.location.href = '/login.html';
             return;
         }
@@ -355,7 +383,7 @@ function updateCallsTable() {
             const capitalizedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
             
             divider.innerHTML = `
-                <td colspan="6" class="px-6 py-3">
+                <td colspan="7" class="px-6 py-3">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-calendar-day text-blue-600"></i>
                         <span class="font-semibold text-gray-700">${capitalizedDay}</span>
@@ -388,6 +416,9 @@ function createCallTableRow(call, index) {
     row.innerHTML = `
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
             ${escapeHtml(call.from_number || '--')}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            ${escapeHtml(call.to_number || '--')}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
             ${formattedDate}
@@ -646,8 +677,8 @@ async function handleSyncRetell() {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sincronizzando...';
         
-        // Ottieni JWT token dalla sessione
-        const token = localStorage.getItem('innoverAIToken');
+        // Ottieni JWT token dalla sessione usando helper unificato
+        const token = getAuthToken();
         if (!token) {
             throw new Error('Non autenticato. Esegui il login prima.');
         }
@@ -996,14 +1027,211 @@ async function handleLoadDemo() {
 /**
  * Gestisce il logout dell'utente
  */
-function handleLogout() {
+async function handleLogout() {
     console.log('👋 Logout initiated...');
     const sessionKey = window.AUTH_CONFIG?.SESSION?.KEY || 'innoverAISession';
-    localStorage.removeItem(sessionKey);
-    localStorage.removeItem('innoverAIToken');
-    window.location.href = '/login.html';
+    
+    try {
+        // Ottieni token usando helper unificato
+        const token = getAuthToken();
+        
+        // Chiama API logout se token presente
+        if (token) {
+            await fetch('/api/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }).catch(err => console.warn('Logout API failed:', err));
+        }
+    } catch (e) {
+        console.warn('Logout error:', e);
+    } finally {
+        // Pulisci sempre il localStorage anche se l'API fallisce
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Clear global session
+        if (window.currentSession) {
+            delete window.currentSession;
+        }
+        
+        // Redirect al login
+        window.location.href = '/login.html';
+    }
+}
+
+/**
+ * Mostra modal con i dettagli della conversazione
+ * @param {number} index - Indice della chiamata nei dati filtrati
+ */
+function showConversationModal(index) {
+    const call = dashboardState.filteredData[index];
+    if (!call) {
+        showNotification('Chiamata non trovata', 'error');
+        return;
+    }
+    
+    // Get or create modal
+    let modal = document.getElementById('conversationModal');
+    if (!modal) {
+        // Create modal HTML
+        modal = document.createElement('div');
+        modal.id = 'conversationModal';
+        modal.className = 'fixed inset-0 z-50 overflow-y-auto hidden';
+        modal.innerHTML = `
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <!-- Background overlay -->
+                <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeConversationModal()"></div>
+                
+                <!-- Modal panel -->
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                    <!-- Header -->
+                    <div class="bg-blue-600 px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-medium text-white" id="modalTitle">
+                                <i class="fas fa-phone-alt mr-2"></i>Dettagli Chiamata
+                            </h3>
+                            <button onclick="closeConversationModal()" class="text-white hover:text-gray-200">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div class="px-6 py-4">
+                        <!-- Info chiamata -->
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Da</p>
+                                <p class="mt-1 text-sm text-gray-900" id="modalFrom">--</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">A</p>
+                                <p class="mt-1 text-sm text-gray-900" id="modalTo">--</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Data e Ora</p>
+                                <p class="mt-1 text-sm text-gray-900" id="modalDate">--</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Durata</p>
+                                <p class="mt-1 text-sm text-gray-900" id="modalDuration">--</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Stato</p>
+                                <p class="mt-1 text-sm text-gray-900" id="modalStatus">--</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Costo</p>
+                                <p class="mt-1 text-sm text-gray-900" id="modalCost">--</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Summary (se presente) -->
+                        <div id="modalSummarySection" class="hidden mb-6">
+                            <h4 class="text-md font-semibold text-gray-900 mb-2">
+                                <i class="fas fa-file-alt mr-2 text-blue-600"></i>Riepilogo Chiamata
+                            </h4>
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap" id="modalSummary"></p>
+                            </div>
+                        </div>
+                        
+                        <!-- Detailed Summary (se presente) -->
+                        <div id="modalDetailedSummarySection" class="hidden mb-6">
+                            <h4 class="text-md font-semibold text-gray-900 mb-2">
+                                <i class="fas fa-clipboard-list mr-2 text-green-600"></i>Riepilogo Dettagliato
+                            </h4>
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap" id="modalDetailedSummary"></p>
+                            </div>
+                        </div>
+                        
+                        <!-- Transcript -->
+                        <div id="modalTranscriptSection" class="mb-6">
+                            <h4 class="text-md font-semibold text-gray-900 mb-2">
+                                <i class="fas fa-comment-dots mr-2 text-purple-600"></i>Trascrizione Completa
+                            </h4>
+                            <div class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap" id="modalTranscript">Nessuna trascrizione disponibile</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="bg-gray-50 px-6 py-3 flex justify-end">
+                        <button onclick="closeConversationModal()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                            <i class="fas fa-times mr-2"></i>Chiudi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Populate modal with call data
+    document.getElementById('modalFrom').textContent = call.from_number || '--';
+    document.getElementById('modalTo').textContent = call.to_number || '--';
+    document.getElementById('modalDate').textContent = call.start_time ? formatDateTime(call.start_time) : (call.created_at ? formatDateTime(call.created_at) : '--');
+    
+    const durationMinutes = call.duration_seconds ? Math.floor(call.duration_seconds / 60) : 0;
+    const durationSeconds = call.duration_seconds ? Math.round(call.duration_seconds % 60) : 0;
+    document.getElementById('modalDuration').textContent = `${durationMinutes}m ${durationSeconds}s`;
+    
+    document.getElementById('modalStatus').innerHTML = `<span class="status-badge status-${call.status || 'unknown'}">
+        <i class="fas ${getStatusIcon(call.status)} mr-1"></i>${getStatusLabel(call.status)}
+    </span>`;
+    
+    const callCost = call.duration_seconds ? Math.round((call.duration_seconds / 60) * dashboardState.currentCostPerMinute * 100) / 100 : 0;
+    document.getElementById('modalCost').textContent = `€${callCost.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`;
+    
+    // Show summary sections if available
+    const summarySection = document.getElementById('modalSummarySection');
+    const detailedSummarySection = document.getElementById('modalDetailedSummarySection');
+    const transcriptSection = document.getElementById('modalTranscriptSection');
+    
+    if (call.call_summary) {
+        document.getElementById('modalSummary').textContent = call.call_summary;
+        summarySection.classList.remove('hidden');
+    } else {
+        summarySection.classList.add('hidden');
+    }
+    
+    if (call.detailed_call_summary) {
+        document.getElementById('modalDetailedSummary').textContent = call.detailed_call_summary;
+        detailedSummarySection.classList.remove('hidden');
+    } else {
+        detailedSummarySection.classList.add('hidden');
+    }
+    
+    // Show transcript (fallback if no summaries)
+    if (call.retell_transcript) {
+        document.getElementById('modalTranscript').textContent = call.retell_transcript;
+        transcriptSection.classList.remove('hidden');
+    } else {
+        document.getElementById('modalTranscript').textContent = 'Nessuna trascrizione disponibile';
+        // Hide transcript section if we have summaries
+        if (call.call_summary || call.detailed_call_summary) {
+            transcriptSection.classList.add('hidden');
+        }
+    }
+    
+    // Show modal
+    modal.classList.remove('hidden');
+}
+
+/**
+ * Chiude la modal della conversazione
+ */
+function closeConversationModal() {
+    const modal = document.getElementById('conversationModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
 }
 
 // Funzioni di utilità utilizzate nel codice
-// (Queste funzioni sono definite in utils.js)
 // (Queste funzioni sono definite in utils.js)

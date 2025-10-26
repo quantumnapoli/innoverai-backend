@@ -288,6 +288,19 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Logout endpoint (invalida sessione)
+app.post('/api/logout', authMiddleware, async (req, res) => {
+    try {
+        // In un sistema production, qui invalideresti il token (es. aggiungendolo a una blacklist in Redis)
+        // Per ora, log e conferma
+        console.log(`[LOGOUT] User ${req.user.username} logged out`);
+        res.json({ ok: true, message: 'Logged out successfully' });
+    } catch (err) {
+        console.error('Logout error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 function authMiddleware(req, res, next) {
     const auth = req.headers.authorization;
     if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
