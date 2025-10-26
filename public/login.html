@@ -187,6 +187,7 @@
                         role: user.role,
                         name: user.name,
                         agent_id: user.agent_id,
+                        token: 'local-fallback-token', // Add token even for local login
                         loginTime: Date.now(),
                         expires: Date.now() + sessionDuration
                     }));
