@@ -15,7 +15,7 @@ app.use(helmet());
 app.use((req, res, next) => {
     // Relaxed CSP to allow CDN + data: fonts while we self-host; will tighten later
     // Allow dashboard and backend API endpoints in connect-src via env or defaults
-    const extraConnect = process.env.CSP_CONNECT_SRC || "https://innoverai-production-06cb.up.railway.app https://innoverai-backend-production.up.railway.app https://dashboard.innoverai.com https://api.innoverai.com";
+    const extraConnect = process.env.CSP_CONNECT_SRC || "https://innoverai-production-06cb.up.railway.app https://innoverai-backend-production.up.railway.app https://dashboard.innoverai.com https://api.innoverai.com https://cdn.jsdelivr.net";
     res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' https://api.retellai.com https://sqr.co " + extraConnect + "; frame-ancestors 'none';");
     // Override COEP/COOP set by edge to allow loading third-party CDN resources during transition
     res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
