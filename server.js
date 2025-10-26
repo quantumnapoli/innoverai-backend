@@ -68,29 +68,22 @@ const dashboardDist = path.join(__dirname, 'public', 'dashboard');
 // Auto-detect presence of index.html and enable static serving in production or when explicitly enabled
 try {
     const indexExists = fs.existsSync(path.join(frontendDist, 'index.html'));
-    if (indexExists && (process.env.SERVE_STATIC === 'true' || process.env.NODE_ENV === 'production')) {
-        console.log('📦 Serving frontend static files from', frontendDist);
+    const dashboardExists = fs.existsSync(path.join(dashboardDist, 'index.html'));
+    if ((indexExists || dashboardExists) && (process.env.SERVE_STATIC === 'true' || process.env.NODE_ENV === 'production')) {
+        console.log('📦 Serving static files from', dashboardExists ? dashboardDist : frontendDist);
 
-        // If a request comes for the dashboard host, serve the dashboard static files
-        if (fs.existsSync(dashboardDist)) {
-            // Serve the dashboard as the backend root (dashboard is the home page for this service)
-            // Serve static assets from dashboardDist at root and ensure index.html is returned for '/'
+        // If dashboard build exists, serve it as the root of this service (dashboard is the app)
+        if (dashboardExists) {
             app.use(express.static(dashboardDist));
-
-            // Explicit route for root to serve dashboard index
             app.get('/', (req, res) => {
                 return res.sendFile(path.join(dashboardDist, 'index.html'));
             });
-
-            // Redirect /dashboard to root for convenience
             app.get('/dashboard', (req, res) => res.redirect('/'));
-
-            // Let express.static handle other dashboard asset requests under /dashboard/* by mapping to dashboardDist
             app.use('/dashboard', express.static(dashboardDist));
+        } else {
+            // Default static for landing / other hosts
+            app.use(express.static(frontendDist));
         }
-
-        // Default static for landing / other hosts
-        app.use(express.static(frontendDist));
     } else {
         console.log('ℹ️ Frontend index.html not found or static serving not enabled (SERVE_STATIC not set / not production)');
     }
