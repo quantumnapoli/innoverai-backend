@@ -169,8 +169,30 @@ async function loadCallsDataLocal() {
     try {
         console.log('📡 Caricamento dati chiamate locali...');
         
+        // Ottieni JWT token dalla sessione
+        const token = localStorage.getItem('innoverAIToken');
+        if (!token) {
+            throw new Error('Non autenticato. Esegui il login.');
+        }
+        
+        // Costruisci URL API
+        const apiUrl = `${window.API_BASE_URL || ''}/api/calls`;
+        
         // Chiamata API per ottenere i dati delle chiamate
-        const response = await fetch('tables/calls?limit=' + DASHBOARD_CONFIG.MAX_RECORDS_PER_PAGE);
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.status === 401) {
+            console.log('Token scaduto, redirect a login');
+            localStorage.removeItem('innoverAIToken');
+            window.location.href = '/login.html';
+            return;
+        }
         
         if (!response.ok) {
             throw new Error(`Errore HTTP: ${response.status}`);
@@ -179,7 +201,7 @@ async function loadCallsDataLocal() {
         const data = await response.json();
         
         // Aggiorna stato con i dati ricevuti
-        dashboardState.callsData = data.data || [];
+        dashboardState.callsData = Array.isArray(data) ? data : (data.data || []);
         dashboardState.filteredData = [...dashboardState.callsData];
         
         console.log(`✅ Caricati ${dashboardState.callsData.length} record di chiamate`);
@@ -274,8 +296,37 @@ function updateCallsTable() {
     // Ordina i dati per data (più recenti prima)
     const sortedData = [...data].sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
     
-    // Genera righe della tabella
+    // Traccia il giorno corrente per i divisori
+    let currentDay = null;
+    
+    // Genera righe della tabella con divisori per giorno
     sortedData.forEach((call, index) => {
+        const callDate = new Date(call.start_time || call.created_at);
+        const dayKey = callDate.toLocaleDateString('it-IT', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        
+        // Se il giorno è cambiato, aggiungi un divisore
+        if (dayKey !== currentDay) {
+            currentDay = dayKey;
+            
+            const divider = document.createElement('tr');
+            divider.className = 'day-divider bg-gray-100 hover:bg-gray-100';
+            
+            const dayName = callDate.toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const capitalizedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+            
+            divider.innerHTML = `
+                <td colspan="8" class="px-6 py-3">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-calendar-day text-blue-600"></i>
+                        <span class="font-semibold text-gray-700">${capitalizedDay}</span>
+                        <span class="text-sm text-gray-500">(${dayKey})</span>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(divider);
+        }
+        
         const row = createCallTableRow(call, index);
         tableBody.appendChild(row);
     });
@@ -563,18 +614,38 @@ async function handleSyncRetell() {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sincronizzando...';
         
-        const connector = getRetellConnector();
-        if (!connector) {
-            throw new Error('Retell Connector non disponibile');
+        // Ottieni JWT token dalla sessione
+        const token = localStorage.getItem('innoverAIToken');
+        if (!token) {
+            throw new Error('Non autenticato. Esegui il login prima.');
         }
         
-        // Esegui sincronizzazione
-        await loadCallsDataFromRetell();
+        // Chiama l'API di sync del backend
+        console.log('🔄 Sincronizzando dati da Retell...');
+        const response = await fetch('/api/sync-retell', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
         
-        showNotification('Sincronizzazione Retell completata', 'success');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || `Errore HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log(`✅ Sync completato: ${result.imported} importati, ${result.updated} aggiornati`);
+        
+        // Ricarica i dati dalla dashboard
+        showNotification(`Sincronizzazione completata: ${result.imported} nuovi, ${result.updated} aggiornati`, 'success');
+        
+        // Ricarica i dati dal database
+        await loadCallsDataLocal();
         
     } catch (error) {
-        console.error('❌ Errore sync manuale Retell:', error);
+        console.error('❌ Errore sync Retell:', error);
         showNotification(`Errore sincronizzazione: ${error.message}`, 'error');
     } finally {
         // Ripristina pulsante

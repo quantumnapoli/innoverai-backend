@@ -41,6 +41,24 @@
     background-color: #f8fafc;
 }
 
+/* Stili per il divisore di giorno */
+.day-divider {
+    font-weight: 600;
+    background-color: #f3f4f6;
+    border-top: 2px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+    transition: background-color 0.2s ease;
+}
+
+.day-divider:hover {
+    background-color: #f3f4f6;
+    cursor: default;
+}
+
+.day-divider td {
+    padding: 1rem 1.5rem;
+}
+
 /* Stili per i badge di stato */
 .status-badge {
     display: inline-flex;
