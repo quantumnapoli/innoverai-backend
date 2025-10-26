@@ -3,956 +3,507 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INNOVERAI - Sistema di Risposta Vocale AI Avanzato</title>
+    <title>INNOVERAI - Dashboard Analytics</title>
+    
+    <!-- Tailwind CSS per styling moderno e responsive -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js per grafici interattivi -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome per le icone -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .gradient-bg::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>') repeat;
-            animation: slideGrid 20s linear infinite;
-        }
-        
-        @keyframes slideGrid {
-            0% { transform: translateX(0) translateY(0); }
-            100% { transform: translateX(10px) translateY(10px); }
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        
-        .feature-card {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateY(0);
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-        }
-        
-        .floating-animation {
-            animation: floating 6s ease-in-out infinite;
-        }
-        
-        @keyframes floating {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            25% { transform: translateY(-10px) rotate(1deg); }
-            50% { transform: translateY(-20px) rotate(0deg); }
-            75% { transform: translateY(-10px) rotate(-1deg); }
-        }
-        
-        .pulse-animation {
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.05); }
-        }
-        
-        .fade-in-up {
-            animation: fadeInUp 1s ease-out forwards;
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        
-        @keyframes fadeInUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .stagger-animation {
-            animation-delay: calc(var(--stagger) * 0.1s);
-        }
-        
-        .typewriter {
-            overflow: hidden;
-            white-space: nowrap;
-            animation: typewriter 3s steps(40) 1s forwards, blink 1s ease-in-out infinite;
-            border-right: 2px solid #fff;
-        }
-        
-        @keyframes typewriter {
-            0% { width: 0; }
-            100% { width: 100%; }
-        }
-        
-        @keyframes blink {
-            0%, 50% { border-color: transparent; }
-            51%, 100% { border-color: #fff; }
-        }
-        
-        .parallax-bg {
-            background-attachment: fixed;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover;
-        }
-        
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .tech-grid {
-            background: linear-gradient(45deg, #f0f9ff 25%, transparent 25%), 
-                        linear-gradient(-45deg, #f0f9ff 25%, transparent 25%), 
-                        linear-gradient(45deg, transparent 75%, #f0f9ff 75%), 
-                        linear-gradient(-45deg, transparent 75%, #f0f9ff 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-        }
-        
-        .number-counter {
-            font-feature-settings: 'tnum';
-            font-variant-numeric: tabular-nums;
-        }
-        
-        /* Header è gestito con inline styles per evitare conflitti */
-        
-        @media (max-width: 768px) {
-            .typewriter {
-                animation: none;
-                border: none;
-                white-space: normal;
-                width: auto;
+    
+    <!-- Google Fonts per tipografia moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1L2Y0GVP80"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-1L2Y0GVP80');
+    </script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Configurazione Dashboard -->
+    <script src="config.js"></script>
+    
+    <!-- Configurazione e Dati Demo -->
+    <script>
+        // Carica configurazione inline per evitare problemi di path
+        window.AUTH_CONFIG = {
+            USERS: {
+                'demo': { password: 'demo', role: 'demo', name: 'Utente Demo' },
+                'admin': { password: 'jament78#@', role: 'admin', name: 'Admin' },
+                'marco': { password: 'esposito2025', role: 'client', name: 'Marco Esposito', agent_id: 'agent_0c73985e38f6110dbec24596c1' }
+            },
+            SESSION: {
+                KEY: 'innoverAISession',
+                DURATION: 24 * 60 * 60 * 1000
             }
-        }
-        /* Ensure hamburger visibility is controlled by responsive CSS (overrides inline styles) */
-        #mobileMenuBtn { display: block !important; }
-        #desktopNav { display: none !important; }
-        @media (min-width: 768px) {
-            #mobileMenuBtn { display: none !important; }
-            #desktopNav { display: flex !important; }
-            #mobileMenu { display: none !important; }
+        };
+        window.RETELL_CONFIG = {
+            BASE_URL: 'https://api.retellai.com',
+            API_KEY: '',
+            AGENT_ID: ''
+        };
+        window.API_BASE_URL = '';
+
+        // Try to populate runtime config from backend /config endpoint
+        // NOTE: do not blindly accept domains that are known to cause CORS preflight redirects
+        (async function(){
+            try {
+                const resp = await fetch('/config');
+                if (!resp.ok) return;
+                const cfg = await resp.json();
+                // Only non-secret values are returned by the server
+                if (cfg.RETELL_BASE_URL) window.RETELL_CONFIG.BASE_URL = cfg.RETELL_BASE_URL;
+                // Accept BASE_URL_APP only if it does not point to the problematic api host
+                if (cfg.BASE_URL_APP && !cfg.BASE_URL_APP.includes('api.innoverai.com')) {
+                    window.API_BASE_URL = cfg.BASE_URL_APP;
+                } else {
+                    console.warn('⚠️ Skipping BASE_URL_APP from /config because it points to api.innoverai.com or is empty. Using client config fallback.');
+                }
+                if (cfg.API_URL && !window.API_BASE_URL) window.API_BASE_URL = cfg.API_URL;
+                console.log('🔒 Runtime config loaded from /config');
+            } catch (e) {
+                console.warn('⚠️ Could not load /config:', e.message);
+            }
+        })();
+    </script>
+    <script src="js/demo-data.js"></script>
+    
+    <style>
+        /* Configurazione Tailwind personalizzata */
+        body {
+            font-family: 'Inter', sans-serif;
         }
     </style>
 </head>
-<body class="bg-gray-50 overflow-x-hidden">
-    <!-- Header Navigation -->
-    <header id="mainHeader" style="position: fixed; top: 0; left: 0; right: 0; z-index: 9999; display: block !important; visibility: visible !important; background: rgba(102, 126, 234, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); transition: all 0.3s ease;">
-        <nav style="max-width: 1200px; margin: 0 auto; padding: 1rem 1.5rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-                <!-- Logo -->
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <img id="mainLogo" src="assets/logowhite-tr.webp" data-white-src="assets/logowhite-tr.webp" data-blue-src="assets/logoblue.webp" alt="INNOVERAI" style="height: 2.5rem;" />
-                </div>
+<body class="bg-gray-50">
+    <!-- Authentication Check -->
+    <script>
+        // Controllo autenticazione sicuro
+        function checkAuthentication() {
+            try {
+                const sessionKey = window.AUTH_CONFIG ? window.AUTH_CONFIG.SESSION.KEY : 'innoverAISession';
+                const session = localStorage.getItem(sessionKey);
+                console.log('🔐 Checking authentication, session:', session ? 'found' : 'not found');
                 
-                <!-- Navigation Links Desktop -->
-                <div id="desktopNav" style="display: none; align-items: center; gap: 2rem;">
-                    <a href="#come-funziona" style="color: white; font-weight: 500; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#fde047'" onmouseout="this.style.color='white'">
-                        Come Funziona
-                    </a>
-                    <a href="#prezzi" style="color: white; font-weight: 500; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#fde047'" onmouseout="this.style.color='white'">
-                        Prezzi
-                    </a>
-                    <a href="https://sqr.co/innoverai-wa/" style="background: white; color: #7c3aed; padding: 0.5rem 1.5rem; border-radius: 9999px; font-weight: 600; text-decoration: none; transition: all 0.2s; display: inline-block;" onmouseover="this.style.background='#f3f4f6'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='white'; this.style.transform='scale(1)'">
-                        Contattaci
-                    </a>
-                </div>
+                if (!session) {
+                    console.log('❌ No session found, redirecting to login');
+                    setTimeout(() => window.location.href = 'login.html', 100);
+                    return false;
+                }
                 
-                <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" style="display: block; color: white; background: none; border: none; font-size: 1.5rem; cursor: pointer;">
-                    <i class="fas fa-bars"></i>
+                const sessionData = JSON.parse(session);
+                const now = Date.now();
+                
+                if (!sessionData.expires || now > sessionData.expires) {
+                    console.log('❌ Session expired, redirecting to login');
+                    localStorage.removeItem(sessionKey);
+                    setTimeout(() => window.location.href = 'login.html', 100);
+                    return false;
+                }
+                
+                console.log('✅ Authentication successful, user:', sessionData.name || sessionData.username);
+                
+                // Aggiorna header con info utente
+                updateHeaderWithUserInfo(sessionData);
+                
+                return true;
+            } catch (e) {
+                console.error('❌ Authentication error:', e);
+                const sessionKey = window.AUTH_CONFIG ? window.AUTH_CONFIG.SESSION.KEY : 'innoverAISession';
+                localStorage.removeItem(sessionKey);
+                setTimeout(() => window.location.href = 'login.html', 100);
+                return false;
+            }
+        }
+        
+        // Aggiorna header con informazioni utente
+        function updateHeaderWithUserInfo(sessionData) {
+            const headerTitle = document.querySelector('header h1');
+            if (headerTitle && sessionData.role === 'demo') {
+                headerTitle.textContent = 'INNOVERAI Dashboard - Modalità Demo';
+            }
+        }
+        
+        // Esegui controllo quando il DOM è pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkAuthentication);
+        } else {
+            checkAuthentication();
+        }
+    </script>
+
+    <!-- Header con logo e titolo -->
+    <header class="bg-blue-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <img id="dashboardLogo" src="/assets/logowhite-tr.webp" data-white-src="/assets/logowhite-tr.webp" data-blue-src="../assets/logoblue.webp" alt="INNOVERAI" class="h-8 mr-3" />
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Stato connessione Retell -->
+                    <div class="flex items-center">
+                        <div id="retellStatus" class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                        <span class="text-sm" id="retellStatusText">Retell: Disconnesso</span>
+                    </div>
+                    <!-- Pulsante sync manuale Retell -->
+                    <button id="syncRetellBtn" class="bg-green-500 hover:bg-green-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        <i class="fas fa-sync-alt mr-2"></i>Sync Retell
+                    </button>
+                    <!-- Indicatore di ultimo aggiornamento -->
+                    <span class="text-sm" id="lastUpdate">Ultimo aggiornamento: --</span>
+                    <!-- Pulsante logout -->
+                    <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-md text-sm font-medium transition-colors ml-4">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Sezione filtri -->
+        <div class="mb-6">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                        <i class="fas fa-filter mr-2"></i>Filtri Ricerca
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <!-- Filtro data inizio -->
+                        <div>
+                            <label for="startDate" class="block text-sm font-medium text-gray-700">Data Inizio</label>
+                            <input type="date" id="startDate" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        
+                        <!-- Filtro data fine -->
+                        <div>
+                            <label for="endDate" class="block text-sm font-medium text-gray-700">Data Fine</label>
+                            <input type="date" id="endDate" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        
+                        <!-- Filtro tipo chiamata -->
+                        <div>
+                            <label for="callDirection" class="block text-sm font-medium text-gray-700">Tipo Chiamata</label>
+                            <select id="callDirection" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                <option value="">Tutti</option>
+                                <option value="inbound">Inbound</option>
+                                <option value="outbound">Outbound</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Filtro stato -->
+                        <div>
+                            <label for="callStatus" class="block text-sm font-medium text-gray-700">Stato</label>
+                            <select id="callStatus" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                <option value="">Tutti</option>
+                                <option value="completed">Completate</option>
+                                <option value="failed">Fallite</option>
+                                <option value="in_progress">In Corso</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex justify-between">
+                        <div class="flex space-x-2">
+                            <button id="applyFilters" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                <i class="fas fa-search mr-2"></i>Applica Filtri
+                            </button>
+                            <button id="showAllDataBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                <i class="fas fa-eye mr-2"></i>Mostra Tutti
+                            </button>
+                        </div>
+                        <button id="resetFilters" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                            <i class="fas fa-undo mr-2"></i>Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione metriche riepilogative -->
+        <div class="mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Totale chiamate -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-phone text-2xl text-blue-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Totale Chiamate</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="totalCalls">0</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Totale minuti -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-clock text-2xl text-green-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Totale Minuti</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="totalMinutes">0.00</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Costo totale -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-euro-sign text-2xl text-yellow-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Costo Totale</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="totalCost">€0.00</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Durata media -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-chart-line text-2xl text-purple-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Durata Media</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="averageDuration">0.00 min</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione grafici -->
+        <div class="mb-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Grafico chiamate per giorno -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            <i class="fas fa-chart-bar mr-2"></i>Chiamate per Giorno
+                        </h3>
+                        <div style="height: 400px;">
+                            <canvas id="dailyCallsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grafico costo giornaliero -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            <i class="fas fa-chart-line mr-2"></i>Costo Giornaliero
+                        </h3>
+                        <div style="height: 400px;">
+                            <canvas id="dailyCostChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione impostazioni (nascosta) -->
+        <div class="mb-6 hidden">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                        <i class="fas fa-cog mr-2"></i>Impostazioni
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Impostazioni Costo -->
+                        <div>
+                            <h4 class="text-md font-medium text-gray-800 mb-2">Costi</h4>
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <label for="costPerMinute" class="block text-sm font-medium text-gray-700">Costo per Minuto (€)</label>
+                                    <input type="number" id="costPerMinute" step="0.01" value="0.20" min="0" class="mt-1 block w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div class="mt-6">
+                                    <button id="updateCostBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                        <i class="fas fa-save mr-2"></i>Aggiorna Costi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Impostazioni Retell API -->
+                        <div>
+                            <h4 class="text-md font-medium text-gray-800 mb-2">VocalsAI API</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label for="retellApiKey" class="block text-sm font-medium text-gray-700">API Key</label>
+                                    <input type="password" id="retellApiKey" placeholder="key_..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="retellAgentId" class="block text-sm font-medium text-gray-700">Agent ID (opzionale)</label>
+                                    <input type="text" id="retellAgentId" placeholder="agent_..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <button id="updateRetellBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                    <i class="fas fa-key mr-2"></i>Aggiorna Configurazione
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabella principale chiamate -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        <i class="fas fa-table mr-2"></i>Elenco Chiamate
+                    </h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500" id="callsCount">0 chiamate trovate</p>
+                </div>
+                <button id="exportCsvBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    <i class="fas fa-download mr-2"></i>Esporta CSV
                 </button>
             </div>
             
-            <!-- Mobile Menu -->
-            <div id="mobileMenu" style="display: none; margin-top: 1rem; padding-bottom: 1rem; background: rgba(0,0,0,0.05);">
-                <div style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem 0;">
-                    <a href="#come-funziona" style="color: white; font-weight: 500; text-decoration: none; text-align: center; padding: 0.5rem 0; transition: color 0.2s;" onmouseover="this.style.color='#fde047'" onmouseout="this.style.color='white'">
-                        Come Funziona
-                    </a>
-                    <a href="#prezzi" style="color: white; font-weight: 500; text-decoration: none; text-align: center; padding: 0.5rem 0; transition: color 0.2s;" onmouseover="this.style.color='#fde047'" onmouseout="this.style.color='white'">
-                        Prezzi
-                    </a>
-                    <a href="https://sqr.co/innoverai-wa/" style="background: white; color: #7c3aed; padding: 0.5rem 1.5rem; border-radius: 9999px; font-weight: 600; text-decoration: none; text-align: center; display: inline-block; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='white'">
-                        Contattaci
-                    </a>
-                </div>
-            </div>
-        </nav>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="gradient-bg min-h-screen flex items-center justify-center relative pt-20">
-        <!-- Floating Elements -->
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute top-20 left-10 w-32 h-32 bg-white opacity-10 rounded-full floating-animation"></div>
-            <div class="absolute top-40 right-20 w-24 h-24 bg-white opacity-5 rounded-full floating-animation" style="animation-delay: -2s;"></div>
-            <div class="absolute bottom-32 left-1/4 w-16 h-16 bg-white opacity-15 rounded-full floating-animation" style="animation-delay: -4s;"></div>
-            <div class="absolute top-1/3 right-1/3 w-12 h-12 bg-white opacity-8 rounded-full floating-animation" style="animation-delay: -1s;"></div>
-        </div>
-        
-        <div class="container mx-auto px-6 relative z-10">
-            <div class="text-center text-white">
-                <!-- Titolo principale con effetto typewriter -->
-                <h1 class="text-5xl md:text-8xl font-black mb-6 leading-tight">
-                    <span class="block">Crea il tuo</span>
-                    <span class="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-400 to-red-400 typewriter">
-                        agente AI
-                    </span>
-                </h1>
-                
-                <!-- Sottotitolo -->
-                <p class="text-xl md:text-3xl mb-4 max-w-4xl mx-auto opacity-90 leading-relaxed font-light">
-                    Semplifica il tuo impegno con la potenza dell'
-                    <span class="font-semibold text-yellow-300">intelligenza artificiale</span>
-                </p>
-                
-                <p class="text-lg md:text-xl mb-12 max-w-3xl mx-auto opacity-80 leading-relaxed">
-                    Un sistema completo per creare risponditori vocali che capiscono e rispondono come umani,
-                    con analisi avanzate e monitoraggio in tempo reale.
-                </p>
-                
-                <!-- CTA Buttons -->
-                <div class="space-y-4 md:space-y-0 md:space-x-6 md:flex md:justify-center">
-                    <a href="https://sqr.co/innoverai-wa/" class="group inline-block bg-white text-purple-600 px-10 py-5 rounded-full font-bold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-2xl">
-                        <i class="fas fa-chart-bar mr-3 group-hover:rotate-12 transition-transform"></i>
-                        Contattaci
-                        <span class="ml-2 group-hover:translate-x-1 inline-block transition-transform">→</span>
-                    </a>
-                    <a href="#come-funziona" class="group inline-block glass-effect text-white px-10 py-5 rounded-full font-bold text-lg hover:bg-white hover:bg-opacity-20 transition-all duration-300 border-2 border-white border-opacity-30">
-                        <i class="fas fa-play mr-3 group-hover:animate-pulse"></i>
-                        Scopri Come Funziona
-                    </a>
-                </div>
-                
-            </div>
-        </div>
-    </section>
-
-    <!-- Partner Logos block (added) -->
-    <section class="py-12 bg-white">
-        <div class="container mx-auto px-6">
-            <div class="flex items-center justify-center gap-4 flex-nowrap overflow-x-auto">
-                <img src="public/adnkronos-logo.webp" alt="Adnkronos" style="height:48px; opacity:0.95" />
-                <img src="public/ildenaro.it_logo.avif" alt="Il Denaro" style="height:48px; opacity:0.95" />
-                <img src="public/italiantech.jpg" alt="Italian Tech" style="height:48px; opacity:0.95" />
-                <img src="public/logo-repubblica.svg" alt="La Repubblica" style="height:48px; opacity:0.95" />
-                <img src="public/startupitalia-logo.webp" alt="StartupItalia" style="height:48px; opacity:0.95" />
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section id="features" class="py-24 bg-white relative overflow-hidden">
-        <!-- Background Pattern -->
-        <div class="absolute inset-0 tech-grid opacity-30"></div>
-        
-        <div class="container mx-auto px-6 relative z-10">
-            <div class="text-center mb-20 fade-in-up">
-                <h2 class="text-5xl md:text-6xl font-bold text-gray-800 mb-6 gradient-text">
-                    Cos'è un AI Agent?
-                </h2>
-                <p class="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-                    Un AI Agent è un assistente virtuale intelligente, addestrato con tue indicazioni, capace di interagire in modo autonomo con le persone — via telefono, email, chat o altri canali — fornendo informazioni, risolvendo richieste e svolgendo compiti operativi, grazie all'uso dell'intelligenza artificiale generativa.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-20">
-                <!-- Feature 1 -->
-                <div class="feature-card bg-white rounded-3xl p-10 shadow-xl border border-gray-100 fade-in-up stagger-animation" style="--stagger: 1;">
-                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-8 mx-auto transform rotate-3 hover:rotate-6 transition-transform">
-                        <i class="fas fa-robot text-3xl text-white"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Configurazione</h3>
-                    <p class="text-gray-600 text-center leading-relaxed mb-6">
-                        Definisci personalità, tono e competenze del tuo assistente vocale utilizzando 
-                        modelli GPT-5 e tecnologie di sintesi vocale neurali.
-                    </p>
-                </div>
-
-                <!-- Feature 2 -->
-                <div class="feature-card bg-white rounded-3xl p-10 shadow-xl border border-gray-100 fade-in-up stagger-animation" style="--stagger: 2;">
-                    <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-8 mx-auto transform -rotate-3 hover:-rotate-6 transition-transform">
-                        <i class="fas fa-phone-alt text-3xl text-white"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Integrazione Telefonica</h3>
-                    <p class="text-gray-600 text-center leading-relaxed mb-6">
-                        Connetti il sistema al tuo numero tramite VocalsAI per gestire chiamate 
-                        inbound/outbound con latenza sub-200ms e qualità HD.
-                    </p>
-                    
-                </div>
-
-                <!-- Feature 3 -->
-                <div class="feature-card bg-white rounded-3xl p-10 shadow-xl border border-gray-100 fade-in-up stagger-animation" style="--stagger: 3;">
-                    <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-8 mx-auto transform rotate-2 hover:rotate-12 transition-transform">
-                        <i class="fas fa-chart-line text-3xl text-white"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Analytics</h3>
-                    <p class="text-gray-600 text-center leading-relaxed mb-6">
-                        Dashboard real-time con metriche avanzate, costi automatici, 
-                        export CSV e grafici interattivi per ottimizzare le performance.
-                    </p>
-                    
-                </div>
-            </div>
-
-            <!-- Showcase Video/Demo -->
-            <div class="text-center fade-in-up">
-                <div class="glass-effect rounded-3xl p-12 max-w-4xl mx-auto">
-                    <h3 class="text-3xl font-bold text-gray-800 mb-6">Prova il Sistema in Azione</h3>
-                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-12 text-white">
-                        <a href="https://sqr.co/innoverai-wa/" class="inline-block bg-white text-purple-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors">
-                            <i class="fas mt-1 group-hover:rotate-12 transition-transform"></i>
-                            Contattaci in tempo reale
-                            <span class="ml-2 group-hover:translate-x-1 inline-block transition-transform">→</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Technology Stack -->
-    <section class="py-24 bg-white relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50"></div>
-        
-        <div class="container mx-auto px-6 relative z-10">
-            <div class="text-center mb-20 fade-in-up">
-                <span class="inline-block px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold mb-4">
-                    ⚡ TECH STACK
-                </span>
-                <h2 class="text-5xl md:text-6xl font-bold text-gray-800 mb-6">
-                    Tecnologie All'Avanguardia
-                </h2>
-                <p class="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-                    Stack tecnologico per performance, affidabilità e scalabilità massima
-                    con le migliori soluzioni AI del mercato
-                </p>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 mb-16">
-                <div class="text-center group fade-in-up stagger-animation" style="--stagger: 1;">
-                    <div class="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fab fa-python text-4xl text-blue-600"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">VocalsAI</h4>
-                    <p class="text-xs text-gray-600">Voice Platform</p>
-                </div>
-                <div class="text-center group fade-in-up stagger-animation" style="--stagger: 2;">
-                    <div class="w-24 h-24 bg-gradient-to-br from-green-100 to-green-200 rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-brain text-4xl text-green-600"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">OpenAI GPT-5</h4>
-                    <p class="text-xs text-gray-600">Language Model</p>
-                </div>
-                <div class="text-center group fade-in-up stagger-animation" style="--stagger: 3;">
-                    <div class="w-24 h-24 bg-gradient-to-br from-purple-100 to-purple-200 rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-database text-4xl text-purple-600"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">RESTful API</h4>
-                    <p class="text-xs text-gray-600">Data Layer</p>
-                </div>
-                <div class="text-center group fade-in-up stagger-animation" style="--stagger: 4;">
-                    <div class="w-24 h-24 bg-gradient-to-br from-orange-100 to-orange-200 rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-chart-bar text-4xl text-orange-600"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Chart.js</h4>
-                    <p class="text-xs text-gray-600">Analytics UI</p>
-                </div>
-                <div class="text-center group fade-in-up stagger-animation" style="--stagger: 5;">
-                    <div class="w-24 h-24 bg-gradient-to-br from-pink-100 to-pink-200 rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fab fa-js-square text-4xl text-pink-600"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">JavaScript ES6+</h4>
-                    <p class="text-xs text-gray-600">Frontend Logic</p>
-                </div>
-                <div class="text-center group fade-in-up stagger-animation" style="--stagger: 6;">
-                    <div class="w-24 h-24 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fab fa-aws text-4xl text-indigo-600"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Cloud Deploy</h4>
-                    <p class="text-xs text-gray-600">Scalable Infra</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Come Funziona Section -->
-    <section id="come-funziona" class="py-24 bg-white relative overflow-hidden">
-        <!-- Background Pattern -->
-        <div class="absolute inset-0 tech-grid opacity-30"></div>
-        
-        <div class="container mx-auto px-6 relative z-10">
-            <div class="text-center mb-20 fade-in-up">
-                <span class="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold mb-4">
-                    🤖 INTELLIGENZA ARTIFICIALE
-                </span>
-                <h2 class="text-5xl md:text-6xl font-bold text-gray-800 mb-6 gradient-text">
-                    Come Funziona il Sistema
-                </h2>
-                <p class="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-                    Il nostro sistema AI trasforma ogni chiamata in un'esperienza conversazionale naturale e intelligente, 
-                    utilizzando le tecnologie più avanzate del settore.
-                </p>
-            </div>
-
-            <!-- Process Flow -->
-            <div class="max-w-6xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-                    <!-- Step 1 -->
-                    <div class="text-center fade-in-up stagger-animation" style="--stagger: 1;">
-                        <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform hover:scale-110 transition-transform">
-                            <i class="fas fa-phone-volume text-3xl text-white"></i>
-                        </div>
-                        <div class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-4">1</div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-3">Chiamata in Arrivo</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed">
-                            Il sistema riceve la chiamata e si attiva istantaneamente con una risposta professionale.
-                        </p>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="text-center fade-in-up stagger-animation" style="--stagger: 2;">
-                        <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform hover:scale-110 transition-transform">
-                            <i class="fas fa-ear-listen text-3xl text-white"></i>
-                        </div>
-                        <div class="bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-4">2</div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-3">Ascolto & Comprensione</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed">
-                            L'AI analizza la voce, comprende il linguaggio naturale e identifica l'intento del chiamante.
-                        </p>
-                    </div>
-
-                    <!-- Step 3 -->
-                    <div class="text-center fade-in-up stagger-animation" style="--stagger: 3;">
-                        <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform hover:scale-110 transition-transform">
-                            <i class="fas fa-brain text-3xl text-white"></i>
-                        </div>
-                        <div class="bg-purple-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-4">3</div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-3">Elaborazione AI</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed">
-                            Utilizziamo GPT-5 per elaborare la risposta più appropriata basata su conoscenze aziendali.
-                        </p>
-                    </div>
-
-                    <!-- Step 4 -->
-                    <div class="text-center fade-in-up stagger-animation" style="--stagger: 4;">
-                        <div class="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform hover:scale-110 transition-transform">
-                            <i class="fas fa-comments text-3xl text-white"></i>
-                        </div>
-                        <div class="bg-orange-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-4">4</div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-3">Risposta Naturale</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed">
-                            L'AI fornisce una risposta vocale naturale, risolvendo le richieste o indirizzando correttamente.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Pricing Section -->
-    <section id="prezzi" class="py-24 bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden">
-        <div class="container mx-auto px-6">
-            <div class="text-center mb-20 fade-in-up">
-                <span class="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold mb-4">
-                    💰 PREZZI TRASPARENTI
-                </span>
-                <h2 class="text-5xl md:text-6xl font-bold text-gray-800 mb-6">
-                    Investimento & Costi
-                </h2>
-                <p class="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-                    Prezzi chiari e competitivi per trasformare la tua comunicazione aziendale 
-                    con tecnologia AI all'avanguardia
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-                <!-- Setup Fee -->
-                <div class="bg-white rounded-3xl p-10 shadow-2xl border border-gray-100 relative overflow-hidden fade-in-up stagger-animation" style="--stagger: 1;">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full -mr-16 -mt-16"></div>
-                    <div class="relative z-10">
-                        <div class="text-center mb-8">
-                            <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <i class="fas fa-rocket text-3xl text-white"></i>
-                            </div>
-                            <h3 class="text-3xl font-bold text-gray-800 mb-4">Setup Iniziale</h3>
-                            <div class="flex items-center justify-center mb-4">
-                                <span class="text-5xl font-black text-gray-800"> ̶€̶5̶0̶0̶0̶</span>
-                                <span class="text-lg text-gray-600 ml-2">Scopri la promozione</span>
-                            </div>
-                            <p class="text-gray-600 leading-relaxed">
-                                Configurazione completa del tuo sistema AI personalizzato
-                            </p>
-                        </div>
-                        
-                        <div class="space-y-4">
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 text-xl mr-4 mt-1"></i>
-                                <div>
-                                    <div class="font-semibold text-gray-800">Configurazione Agente AI</div>
-                                    <div class="text-sm text-gray-600">Personalità, voce e competenze su misura</div>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 text-xl mr-4 mt-1"></i>
-                                <div>
-                                    <div class="font-semibold text-gray-800">Integrazione Telefonica</div>
-                                    <div class="text-sm text-gray-600">Setup completo con VocalsAI</div>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 text-xl mr-4 mt-1"></i>
-                                <div>
-                                    <div class="font-semibold text-gray-800">Dashboard Analytics</div>
-                                    <div class="text-sm text-gray-600">Sistema di monitoraggio avanzato</div>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 text-xl mr-4 mt-1"></i>
-                                <div>
-                                    <div class="font-semibold text-gray-800">Test & Ottimizzazione</div>
-                                    <div class="text-sm text-gray-600">Calibrazione e performance tuning</div>
-                                </div>
-                            </div>
-                            
-                        </div>
-                        
-                    </div>
-                    <a href="https://sqr.co/innoverai-wa/" class="group inline-block bg-white text-purple-600 px-10 py-5 rounded-full font-bold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-xl mt-4">
-                        <i class="fas mt-1 group-hover:rotate-12 transition-transform"></i>
-                        Contattaci
-                        <span class="ml-2 group-hover:translate-x-1 inline-block transition-transform">→</span>
-                    </a>
-                </div>
-
-                <!-- Usage Cost -->
-                <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-10 shadow-2xl text-white relative overflow-hidden fade-in-up stagger-animation" style="--stagger: 2;">
-                    <div class="absolute top-0 left-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -ml-16 -mt-16"></div>
-                    <div class="absolute bottom-0 right-0 w-24 h-24 bg-white bg-opacity-5 rounded-full -mr-12 -mb-12"></div>
-                    <div class="relative z-10">
-                        <div class="text-center mb-8">
-                            <div class="w-20 h-20 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <i class="fas fa-phone-volume text-3xl text-white"></i>
-                            </div>
-                            <h3 class="text-3xl font-bold mb-4">Costo per Utilizzo</h3>
-                            <div class="flex items-center justify-center mb-4">
-                                <span class="text-5xl font-black">€0.25</span>
-                                <span class="text-lg opacity-90 ml-2">/minuto</span>
-                            </div>
-                            <p class="text-white opacity-90 leading-relaxed">
-                                Paghi solo per le conversazioni effettive del tuo agente AI
-                            </p>
-                        </div>
-                        
-                        <div class="space-y-4">
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-200 text-xl mr-4 mt-1"></i>
-                                <div>
-                                    <div class="font-semibold">Conversazioni AI Illimitate</div>
-                                    <div class="text-sm opacity-80">Nessun limite al numero di chiamate</div>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-200 text-xl mr-4 mt-1"></i>
-                                <div>
-                                    <div class="font-semibold">Export Dati Completo</div>
-                                    <div class="text-sm opacity-80">CSV, report e analytics dettagliate</div>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-200 text-xl mr-4 mt-1"></i>
-                                <div>
-                                    <div class="font-semibold">Supporto Tecnico</div>
-                                    <div class="text-sm opacity-80">Assistenza continua e aggiornamenti</div>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-200 text-xl mr-4 mt-1"></i>
-                                <div>
-                                    <div class="font-semibold">Scalabilità Automatica</div>
-                                    <div class="text-sm opacity-80">Sistema si adatta al tuo volume</div>
-                                </div>
-                            </div>
-                        </div>
-                        <a href="https://wa.me/+393896868162?text=Ciao, voglio creare il mio agente vocale AI" class="group inline-block bg-white text-purple-600 px-10 py-5 rounded-full font-bold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-xl mt-4">
-                            <i class="fas mt-1 group-hover:rotate-12 transition-transform"></i>
-                            Contattaci
-                            <span class="ml-2 group-hover:translate-x-1 inline-block transition-transform">→</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Social Proof / Testimonials -->
-    <section class="py-24 bg-gradient-to-br from-gray-900 to-gray-800 text-white relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-purple-900/20"></div>
-        
-        <div class="container mx-auto px-6 relative z-10">
-            <div class="text-center mb-20 fade-in-up">
-                <span class="inline-block px-4 py-2 bg-white bg-opacity-20 text-white rounded-full text-sm font-semibold mb-4">
-                    🏆 SUCCESS STORIES
-                </span>
-                <h2 class="text-5xl md:text-6xl font-bold mb-6">
-                    Risultati Straordinari
-                </h2>
-                <p class="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-                    Aziende di ogni settore hanno trasformato il loro customer service con il nostro sistema AI
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-                <div class="glass-effect rounded-3xl p-8 text-center fade-in-up stagger-animation" style="--stagger: 1;">
-                    <div class="text-5xl font-bold text-green-400 mb-2 number-counter" data-target="340">0</div>
-                    <div class="text-lg font-semibold mb-2">% ROI Medio</div>
-                    <div class="text-sm text-gray-300">Ritorno investimento in 6 mesi</div>
-                </div>
-                <div class="glass-effect rounded-3xl p-8 text-center fade-in-up stagger-animation" style="--stagger: 2;">
-                    <div class="text-5xl font-bold text-blue-400 mb-2 number-counter" data-target="87">0</div>
-                    <div class="text-lg font-semibold mb-2">% Costi Risparmiati</div>
-                    <div class="text-sm text-gray-300">Riduzione costi operativi</div>
-                </div>
-                <div class="glass-effect rounded-3xl p-8 text-center fade-in-up stagger-animation" style="--stagger: 3;">
-                    <div class="text-5xl font-bold text-purple-400 mb-2 number-counter" data-target="94">0</div>
-                    <div class="text-lg font-semibold mb-2">% Customer Satisfaction</div>
-                    <div class="text-sm text-gray-300">Soddisfazione clienti media</div>
-                </div>
-            </div>
-
-            <!-- Use Cases -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 fade-in-up">
-                <div class="bg-white bg-opacity-10 rounded-2xl p-6 text-center">
-                    <i class="fas fa-store text-3xl text-blue-400 mb-4"></i>
-                    <h4 class="font-bold mb-2">E-commerce</h4>
-                    <p class="text-sm text-gray-300">Supporto ordini 24/7</p>
-                </div>
-                <div class="bg-white bg-opacity-10 rounded-2xl p-6 text-center">
-                    <i class="fas fa-hotel text-3xl text-green-400 mb-4"></i>
-                    <h4 class="font-bold mb-2">Hospitality</h4>
-                    <p class="text-sm text-gray-300">Prenotazioni automatiche</p>
-                </div>
-                <div class="bg-white bg-opacity-10 rounded-2xl p-6 text-center">
-                    <i class="fas fa-car text-3xl text-purple-400 mb-4"></i>
-                    <h4 class="font-bold mb-2">Automotive</h4>
-                    <p class="text-sm text-gray-300">Assistenza tecnica</p>
-                </div>
-                <div class="bg-white bg-opacity-10 rounded-2xl p-6 text-center">
-                    <i class="fas fa-heartbeat text-3xl text-pink-400 mb-4"></i>
-                    <h4 class="font-bold mb-2">Healthcare</h4>
-                    <p class="text-sm text-gray-300">Appuntamenti medici</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="gradient-bg py-24 relative overflow-hidden">
-        <div class="absolute inset-0 bg-black bg-opacity-20"></div>
-        
-        <div class="container mx-auto px-6 text-center relative z-10">
-            <div class="max-w-4xl mx-auto text-white fade-in-up">
-                <span class="inline-block px-6 py-3 bg-white bg-opacity-20 text-white rounded-full text-sm font-semibold mb-8">
-                    🚀 INIZIA SUBITO
-                </span>
-                <h2 class="text-5xl md:text-7xl font-bold mb-8 leading-tight">
-                    Trasforma le Tue Chiamate
-                    <span class="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400">
-                        in Opportunità
-                    </span>
-                </h2>
-                <p class="text-xl md:text-2xl mb-12 opacity-90 leading-relaxed">
-                    Accedi al dashboard enterprise per monitorare le performance del tuo sistema 
-                    di risposta vocale AI e ottimizzare l'esperienza dei tuoi clienti in tempo reale.
-                </p>
-                
-                <div class="flex flex-col md:flex-row gap-6 justify-center items-center mb-12">
-                    <a href="dashboard/login.html" class="group inline-block bg-white text-purple-600 px-12 py-6 rounded-full font-bold text-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-2xl">
-                        <i class="fas fa-sign-in-alt mr-3 group-hover:rotate-12 transition-transform"></i>
-                        Accedi al Dashboard
-                        <span class="ml-3 group-hover:translate-x-2 inline-block transition-transform">→</span>
-                    </a>
-                    <div class="text-center">
-                        <div class="text-sm opacity-80 mb-2">Accesso Demo:</div>
-                        <div class="bg-white bg-opacity-20 rounded-xl px-4 py-2 text-sm font-mono">
-                            <div>Username: <strong>demo</strong></div>
-                            <div>Password: <strong>demo</strong></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-16">
-        <div class="container mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-                <div class="md:col-span-2">
-                    <div class="flex items-center mb-6">
-                        <img src="assets/logowhite-tr.webp" alt="INNOVERAI" class="h-8 mr-4" />
-                    </div>
-                    <p class="text-gray-400 mb-6 leading-relaxed max-w-md">
-                        Trasformiamo la comunicazione aziendale con l'intelligenza artificiale, 
-                        creando esperienze conversazionali naturali e performance misurabili.
-                    </p>
-                    <div class="flex space-x-4">
-                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors">
-                            <i class="fab fa-linkedin text-sm"></i>
-                        </a>
-                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors">
-                            <i class="fab fa-twitter text-sm"></i>
-                        </a>
-                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors">
-                            <i class="fab fa-github text-sm"></i>
-                        </a>
-                    </div>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-6">Soluzione</h4>
-                    <ul class="space-y-3 text-gray-400">
-                        <li><a href="#features" class="hover:text-white transition-colors">Come Funziona</a></li>
-                        <li><a href="dashboard/login.html" class="hover:text-white transition-colors">Dashboard</a></li>
-                    <li><a class="hover:text-white transition-colors duration-200" target="_blank" rel="noopener noreferrer" href="https://www.iubenda.com/privacy-policy/85025242">Privacy Policy</a></li><li><a class="hover:text-white transition-colors duration-200" target="_blank" rel="noopener noreferrer" href="https://www.iubenda.com/privacy-policy/85025242/cookie-policy">Cookie Policy</a></li><li><a class="hover:text-white transition-colors duration-200" target="_blank" rel="noopener noreferrer" href="https://www.iubenda.com/termini-e-condizioni/85025242">Termini e Condizioni</a></li></ul>
-                </div>
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="px-4 py-5 text-center">
+                <i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i>
+                <p class="mt-2 text-gray-600">Caricamento dati in corso...</p>
             </div>
             
-            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-                <p class="text-gray-500 text-sm mb-4 md:mb-0">
-                    © 2025 INNOVERAI. Powered by VocalsAI & OpenAI Technologies.
-                </p>
-                <p class="text-gray-400 text-xs mt-4 md:mt-0 md:ml-4">innoverai è un progetto di <strong>thebestitaly</strong> P.IVA: 10831191217</p>
+            <!-- Tabella responsive -->
+            <div id="callsTableContainer" class="overflow-x-auto hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Numero Chiamante</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data e Ora</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durata</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stato</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="callsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- I dati delle chiamate verranno inseriti qui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Empty state -->
+            <div id="emptyState" class="px-4 py-8 text-center hidden">
+                <i class="fas fa-phone-slash text-4xl text-gray-400 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Nessuna chiamata trovata</h3>
+                <p class="text-gray-600">Modifica i filtri di ricerca per visualizzare i dati.</p>
             </div>
         </div>
-    </footer>
 
-    <!-- JavaScript -->
+        <!-- Admin Area (Hidden by default, visible only to admin users) -->
+        <div id="adminArea" class="hidden bg-white shadow rounded-lg p-6 mt-6" style="display: none;">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">
+                <i class="fas fa-user-shield mr-2"></i>Admin Panel - Gestione Utenti
+            </h3>
+            
+            <!-- User creation form -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <h4 class="font-semibold text-gray-800 mb-3">Crea Nuovo Utente</h4>
+                <form id="createUserForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <input type="text" id="newUsername" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="newPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                        <input type="text" id="newName" required class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ruolo</label>
+                        <select id="newRole" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="client">Client</option>
+                            <option value="admin">Admin</option>
+                            <option value="demo">Demo</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Agent ID (opzionale)</label>
+                        <input type="text" id="newAgentId" placeholder="agent_..." class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+                            <i class="fas fa-user-plus mr-2"></i>Crea Utente
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Users list -->
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 mb-3">Utenti Esistenti</h4>
+                <div id="usersList" class="space-y-2">
+                    <!-- Users will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript per funzionalità dinamiche -->
     <script>
-        // Smooth scrolling
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
+        // Cambia il logo del dashboard se lo sfondo dell'header diventa chiaro
+        (function() {
+            const dashboardHeader = document.querySelector('header');
+            const dashboardLogo = document.getElementById('dashboardLogo');
 
-        // Number counters animation
-        function animateCounters() {
-            const counters = document.querySelectorAll('.number-counter');
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const target = parseInt(entry.target.dataset.target);
-                        const increment = target / 100;
-                        let count = 0;
-                        
-                        const updateCounter = () => {
-                            if (count < target) {
-                                count += increment;
-                                entry.target.textContent = Math.ceil(count);
-                                setTimeout(updateCounter, 20);
-                            } else {
-                                entry.target.textContent = target;
-                            }
-                        };
-                        
-                        updateCounter();
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.5 });
-
-            counters.forEach(counter => observer.observe(counter));
-        }
-
-        // Staggered fade-in animations
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const fadeObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('fade-in-up');
-                    entry.target.style.animationDelay = `${(entry.target.style.getPropertyValue('--stagger') || 0) * 0.1}s`;
-                }
-            });
-        }, observerOptions);
-
-        // Header scroll effect
-        function handleHeaderScroll() {
-            const header = document.getElementById('mainHeader');
-            const scrollY = window.scrollY;
-            
-            if (scrollY > 100) {
-                header.style.background = 'rgba(255, 255, 255, 0.98)';
-                header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.15)';
-                header.style.borderBottom = '1px solid rgba(0, 0, 0, 0.1)';
-                // Cambia colore testo per modalità scura
-                const logo = header.querySelector('span');
-                const links = header.querySelectorAll('a');
-                if (logo) logo.style.color = '#374151';
-                links.forEach(link => {
-                    if (!link.href.includes('dashboard')) {
-                        link.style.color = '#374151';
-                        link.onmouseover = function() { this.style.color = '#7c3aed'; };
-                        link.onmouseout = function() { this.style.color = '#374151'; };
-                    }
-                });
-            } else {
-                header.style.background = 'rgba(102, 126, 234, 0.9)';
-                header.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
-                header.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
-                // Ripristina colore bianco
-                const logo = header.querySelector('span');
-                const links = header.querySelectorAll('a');
-                if (logo) logo.style.color = 'white';
-                links.forEach(link => {
-                    if (!link.href.includes('dashboard')) {
-                        link.style.color = 'white';
-                        link.onmouseover = function() { this.style.color = '#fde047'; };
-                        link.onmouseout = function() { this.style.color = 'white'; };
-                    }
-                });
-            }
-        }
-
-        // Mobile menu toggle
-        function toggleMobileMenu() {
-            const mobileMenu = document.getElementById('mobileMenu');
-            const menuBtn = document.getElementById('mobileMenuBtn');
-            const icon = menuBtn.querySelector('i');
-            
-            if (mobileMenu.style.display === 'none' || mobileMenu.style.display === '') {
-                mobileMenu.style.display = 'block';
-                icon.className = 'fas fa-times';
-            } else {
-                mobileMenu.style.display = 'none';
-                icon.className = 'fas fa-bars';
-            }
-        }
-
-        // Responsive navigation
-        function updateNavigation() {
-            const desktopNav = document.getElementById('desktopNav');
-            const mobileBtn = document.getElementById('mobileMenuBtn');
-            
-            if (window.innerWidth >= 768) {
-                desktopNav.style.display = 'flex';
-                mobileBtn.style.display = 'none';
-                document.getElementById('mobileMenu').style.display = 'none';
-            } else {
-                desktopNav.style.display = 'none';
-                mobileBtn.style.display = 'block';
-            }
-        }
-
-        // Initialize animations
-        document.addEventListener('DOMContentLoaded', function() {
-            // Debug header
-            const header = document.getElementById('mainHeader');
-            console.log('🔍 Header element found:', header);
-            console.log('✅ Header should be visible now!');
-            
-            // Setup navigation
-            updateNavigation();
-            window.addEventListener('resize', updateNavigation);
-            
-            // Header scroll listener
-            window.addEventListener('scroll', handleHeaderScroll);
-
-            // Change logo depending on header background
-            const mainHeader = document.getElementById('mainHeader');
-            const mainLogo = document.getElementById('mainLogo');
-            function updateLogoBasedOnHeader() {
-                if (!mainHeader || !mainLogo) return;
-                const bg = mainHeader.style.background || window.getComputedStyle(mainHeader).backgroundColor;
-                // If header is light (when scrolled) use blue logo otherwise white
+            function updateDashboardLogo() {
+                if (!dashboardHeader || !dashboardLogo) return;
+                const bg = dashboardHeader.style.background || window.getComputedStyle(dashboardHeader).backgroundColor;
                 if (bg && (bg.includes('255') || bg.includes('rgb(255') || bg.includes('#fff') || bg.includes('rgba(255'))) {
-                    if (mainLogo.getAttribute('data-blue-src')) mainLogo.src = mainLogo.getAttribute('data-blue-src');
+                    dashboardLogo.src = dashboardLogo.getAttribute('data-blue-src');
                 } else {
-                    if (mainLogo.getAttribute('data-white-src')) mainLogo.src = mainLogo.getAttribute('data-white-src');
+                    dashboardLogo.src = dashboardLogo.getAttribute('data-white-src');
                 }
             }
 
-            // update on scroll and on load
-            window.addEventListener('scroll', updateLogoBasedOnHeader);
-            updateLogoBasedOnHeader();
-            
-            // Mobile menu button
-            const mobileBtn = document.getElementById('mobileMenuBtn');
-            if (mobileBtn) {
-                mobileBtn.addEventListener('click', toggleMobileMenu);
-            }
-            
-            // Close mobile menu when clicking on links
-            document.querySelectorAll('#mobileMenu a').forEach(link => {
-                link.addEventListener('click', () => {
-                    document.getElementById('mobileMenu').style.display = 'none';
-                    document.querySelector('#mobileMenuBtn i').className = 'fas fa-bars';
-                });
-            });
-            
-            // Close mobile menu when clicking on links
-            document.querySelectorAll('#mobileMenu a').forEach(link => {
-                link.addEventListener('click', () => {
-                    document.getElementById('mobileMenu').classList.add('hidden');
-                    document.getElementById('mobileMenu').classList.remove('show');
-                    document.querySelector('#mobileMenuBtn i').className = 'fas fa-bars text-2xl';
-                });
-            });
-            
-            // Animate counters
-            animateCounters();
-            
-            // Observe fade-in elements
-            document.querySelectorAll('.fade-in-up, .stagger-animation').forEach(el => {
-                fadeObserver.observe(el);
-            });
-            
-            // Parallax effect for background
-            window.addEventListener('scroll', () => {
-                const scrolled = window.pageYOffset;
-                const parallaxElements = document.querySelectorAll('.parallax-bg');
-                
-                parallaxElements.forEach(element => {
-                    const speed = 0.5;
-                    element.style.transform = `translateY(${scrolled * speed}px)`;
-                });
-            });
-        });
-
-        // Console welcome message
-        console.log(`
-🎙️ AI Voice Response System
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚀 Sistema caricato con successo!
-📊 Dashboard disponibile in /dashboard/
-🔐 Credenziali demo: admin/dashboard123
-⚡ Powered by VocalsAI & OpenAI
-        `);
+            window.addEventListener('scroll', updateDashboardLogo);
+            document.addEventListener('DOMContentLoaded', updateDashboardLogo);
+            // initial
+            updateDashboardLogo();
+        })();
     </script>
+    <script src="js/utils.js"></script>
+    <script src="js/retell-direct-test.js"></script>
+    <script src="js/retell-connector.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/charts.js"></script>
 </body>
 </html>
