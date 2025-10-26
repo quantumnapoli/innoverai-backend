@@ -56,6 +56,33 @@ let dashboardState = {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Inizializzazione Dashboard Chiamate AI Vocale con VocalsAI');
     
+    // Verifica autenticazione prima di tutto
+    const sessionKey = window.AUTH_CONFIG?.SESSION?.KEY || 'innoverAISession';
+    const session = localStorage.getItem(sessionKey);
+    
+    if (!session) {
+        console.log('❌ Nessuna sessione trovata, reindirizzamento al login');
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const sessionData = JSON.parse(session);
+        if (!sessionData.token) {
+            throw new Error('Token non trovato nella sessione');
+        }
+        
+        // Salva il token dove lo cercano gli altri script
+        localStorage.setItem('innoverAIToken', JSON.parse(session).token);
+        
+        console.log('✅ Autenticazione verificata per:', sessionData.name || sessionData.username);
+    } catch (e) {
+        console.error('❌ Errore verifica autenticazione:', e);
+        localStorage.removeItem(sessionKey);
+        window.location.href = '/login.html';
+        return;
+    }
+    
     // Inizializza componenti della dashboard
     initializeDashboard();
     
@@ -455,6 +482,12 @@ function setupEventListeners() {
     
     // Pulsante esportazione CSV
     document.getElementById('exportCsvBtn').addEventListener('click', handleExportCsv);
+    
+    // Pulsante logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+    }
     
     // Event listeners per i filtri (applicazione automatica)
     const filterInputs = ['startDate', 'endDate', 'callDirection', 'callStatus'];
@@ -959,6 +992,15 @@ async function handleLoadDemo() {
         btn.disabled = false;
         btn.innerHTML = originalHtml;
     }
+}
+
+/**
+ * Gestisce il logout dell'utente
+ */
+function handleLogout() {
+    localStorage.removeItem('innoverAIToken');
+    window.location.href = '/login.html';
+    showNotification('Logout effettuato con successo', 'info');
 }
 
 // Funzioni di utilità utilizzate nel codice

@@ -217,15 +217,26 @@
 
         // DISABILITATO AUTO-LOGIN - l'utente deve sempre fare login manualmente
         window.addEventListener('load', function() {
-            // Pulisci SEMPRE tutte le sessioni al caricamento della pagina di login
-            console.log('🧹 Pulizia automatica sessioni al caricamento login page');
+            // NON pulire le sessioni se l'utente è già loggato
+            const sessionKey = window.AUTH_CONFIG ? window.AUTH_CONFIG.SESSION.KEY : 'innoverAISession';
+            const existingSession = localStorage.getItem(sessionKey);
             
-            try {
-                localStorage.clear();
-                sessionStorage.clear();
-                console.log('✅ Tutte le sessioni cancellate');
-            } catch(e) {
-                console.error('❌ Errore pulizia:', e);
+            if (!existingSession) {
+                // Solo pulisci le sessioni se non c'è una sessione attiva
+                console.log('🧹 Pulizia sessioni al caricamento login page (nessuna sessione attiva)');
+                try {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    console.log('✅ Sessioni cancellate');
+                } catch(e) {
+                    console.error('❌ Errore pulizia:', e);
+                }
+            } else {
+                // Se l'utente è già loggato, reindirizza alla dashboard
+                console.log('✅ Sessione attiva trovata, reindirizzamento a dashboard...');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 100);
             }
         });
 
