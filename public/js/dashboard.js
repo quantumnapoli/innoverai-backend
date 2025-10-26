@@ -685,7 +685,8 @@ async function handleSyncRetell() {
         
         // Chiama l'API di sync del backend
         console.log('🔄 Sincronizzando dati da Retell...');
-        const response = await fetch('/api/sync-retell', {
+        const apiUrl = `${window.API_BASE_URL || ''}/api/sync-retell`;
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
