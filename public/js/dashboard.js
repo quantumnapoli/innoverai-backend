@@ -92,6 +92,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Carica i dati iniziali (ora da Retell)
     loadCallsDataFromRetell();
     
+    // Auto-sync su login per aggiornare dati iniziali
+    setTimeout(() => {
+        console.log('🔄 Auto-sync su login...');
+        handleSyncRetell();
+    }, 1000);
+    
     // Configura event listeners
     setupEventListeners();
     
@@ -449,33 +455,38 @@ function applyCurrentFilters() {
  * Configura tutti gli event listeners
  */
 function setupEventListeners() {
+    // Helper per aggiungere event listener in sicurezza
+    const addListener = (id, event, handler) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener(event, handler);
+        }
+    };
+    
     // Pulsanti filtri
-    document.getElementById('applyFilters').addEventListener('click', handleApplyFilters);
-    document.getElementById('resetFilters').addEventListener('click', handleResetFilters);
-    document.getElementById('showAllDataBtn').addEventListener('click', handleShowAllData);
+    addListener('applyFilters', 'click', handleApplyFilters);
+    addListener('resetFilters', 'click', handleResetFilters);
+    addListener('showAllDataBtn', 'click', handleShowAllData);
     
     // Pulsante aggiornamento tariffa
-    document.getElementById('updateCostBtn').addEventListener('click', handleUpdateCost);
+    addListener('updateCostBtn', 'click', handleUpdateCost);
     
     // Pulsante aggiornamento configurazione Retell
-    document.getElementById('updateRetellBtn').addEventListener('click', handleUpdateRetell);
+    addListener('updateRetellBtn', 'click', handleUpdateRetell);
     
     // Pulsanti VocalsAI
-    document.getElementById('syncRetellBtn').addEventListener('click', handleSyncRetell);
-    document.getElementById('loadDemoBtn').addEventListener('click', handleLoadDemo);
-    document.getElementById('debugApiBtn').addEventListener('click', handleDebugApi);
-    document.getElementById('loadRealDataBtn').addEventListener('click', handleLoadRealData);
-    document.getElementById('testDirectBtn').addEventListener('click', handleTestDirect);
-    document.getElementById('autoRefreshBtn').addEventListener('click', handleToggleAutoSync);
+    addListener('syncRetellBtn', 'click', handleSyncRetell);
+    addListener('loadDemoBtn', 'click', handleLoadDemo);
+    addListener('debugApiBtn', 'click', handleDebugApi);
+    addListener('loadRealDataBtn', 'click', handleLoadRealData);
+    addListener('testDirectBtn', 'click', handleTestDirect);
+    addListener('autoRefreshBtn', 'click', handleToggleAutoSync);
     
     // Pulsante esportazione CSV
-    document.getElementById('exportCsvBtn').addEventListener('click', handleExportCsv);
+    addListener('exportCsvBtn', 'click', handleExportCsv);
     
     // Pulsante logout
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
-    }
+    addListener('logoutBtn', 'click', handleLogout);
     
     // Event listeners per i filtri (applicazione automatica)
     const filterInputs = ['startDate', 'endDate', 'callDirection', 'callStatus'];

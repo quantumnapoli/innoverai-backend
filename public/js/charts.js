@@ -119,14 +119,20 @@ function updateCharts() {
  * Inizializza il grafico chiamate per giorno (barre)
  */
 function initializeDailyCallsChart() {
-    const ctx = document.getElementById('dailyCallsChart').getContext('2d');
+    const ctx = document.getElementById('dailyCallsChart');
+    if (!ctx) {
+        console.warn('⚠️ Canvas dailyCallsChart non trovato');
+        return;
+    }
+    
+    const canvasCtx = ctx.getContext('2d');
     
     // Distruggi istanza precedente se esiste
     if (chartsInstances.dailyCallsChart) {
         chartsInstances.dailyCallsChart.destroy();
     }
     
-    chartsInstances.dailyCallsChart = new Chart(ctx, {
+    chartsInstances.dailyCallsChart = new Chart(canvasCtx, {
         type: 'bar',
         data: {
             labels: [],
@@ -195,14 +201,20 @@ function initializeDailyCallsChart() {
  * Inizializza il grafico direzione chiamate (torta)
  */
 function initializeDirectionChart() {
-    const ctx = document.getElementById('directionChart').getContext('2d');
+    const ctx = document.getElementById('directionChart');
+    if (!ctx) {
+        console.warn('⚠️ Canvas directionChart non trovato');
+        return;
+    }
+    
+    const canvasCtx = ctx.getContext('2d');
     
     // Distruggi istanza precedente se esiste
     if (chartsInstances.directionChart) {
         chartsInstances.directionChart.destroy();
     }
     
-    chartsInstances.directionChart = new Chart(ctx, {
+    chartsInstances.directionChart = new Chart(canvasCtx, {
         type: 'doughnut',
         data: {
             labels: ['Inbound', 'Outbound'],
@@ -261,14 +273,20 @@ function initializeDirectionChart() {
  * Inizializza il grafico costi giornalieri (linea)
  */
 function initializeDailyCostChart() {
-    const ctx = document.getElementById('dailyCostChart').getContext('2d');
+    const ctx = document.getElementById('dailyCostChart');
+    if (!ctx) {
+        console.warn('⚠️ Canvas dailyCostChart non trovato');
+        return;
+    }
+    
+    const canvasCtx = ctx.getContext('2d');
     
     // Distruggi istanza precedente se esiste
     if (chartsInstances.dailyCostChart) {
         chartsInstances.dailyCostChart.destroy();
     }
     
-    chartsInstances.dailyCostChart = new Chart(ctx, {
+    chartsInstances.dailyCostChart = new Chart(canvasCtx, {
         type: 'line',
         data: {
             labels: [],
